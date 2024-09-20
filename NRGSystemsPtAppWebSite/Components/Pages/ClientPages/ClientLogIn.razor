@@ -1,0 +1,58 @@
+﻿@* @page "/login" *@
+
+@using NRGSystemsPtAppWebSite;
+@using NRGSystemsPtAppWebSite.Models;
+@using NRGSystemsPtAppWebSite.Services
+@inject FunctionRestService apiClient
+@inject NavigationManager NavigaitonManager
+
+<h3>Client LogIn</h3>
+
+
+<div >
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <a class="nav-link btn btn-primary" href="createLogin">
+                    <span class="oi oi-info" aria-hidden="true"> Create Log In.. </span>
+                </a>
+                <input type="text" class="col-form-label" @bind="clientsName"/>
+                <input type="password" class="visually-hidden-focusable" @bind="clientsid"/>
+                <input type="button" class="btn btn-primary" @onclick="@LogIn" value="Log in..." />
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public static string clientsName { get; set; } = string.Empty;
+    public static int clientsid { get; set; } = 0;
+
+    // LogIn localPassCodes = new();
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        // localPassCodes = loginService.LoadItems();
+    }
+
+    public void LogIn()
+    {
+        // if ((localPassCodes.PassCode == clientsid) && 
+        //     (localPassCodes.PassText == clientsName))
+        // {
+        //     NavigaitonManager.NavigateTo("ProgramList");
+        // }
+        // else
+        // {
+            clientsName = "Try again loser!!!!";
+            // just for debug!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            // !""""""""""""""""""""""""""""""""""""""""""""
+            NavigaitonManager.NavigateTo("ProgramList");
+        // }
+    }
+}
+
+

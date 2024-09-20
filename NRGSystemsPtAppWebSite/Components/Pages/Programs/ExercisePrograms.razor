@@ -1,0 +1,198 @@
+﻿@page "/ExercisePrograms"
+
+@using NRGSystemsPtAppWebSite;
+@using NRGSystemsPtAppWebSite.Models;
+@using NRGSystemsPtAppWebSite.Services
+@inject FunctionRestService apiClient
+@inject NavigationManager NavigaitonManager
+
+<h3>Set @(setCounter + 1) out of @sets sets to do.</h3>
+<h3>Exercise @i out of @ProgramView.AllProgramExercises.Count</h3>
+
+@if (currentExercise is null)
+{
+    <p><em>Loading ..........</em></p>
+}
+else
+{
+    <img src="@ImagePath" width="600" />
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th> Title</th>
+                <td> @currentExercise.ProgramTitle </td>
+            </tr>
+            <tr>
+                <th> Date Issued</th>
+                <td> @currentExercise.DateIssued </td>
+            </tr>
+            <tr>
+                <th> Exercise </th>
+                <td> @currentExercise.NameOfExercise </td>
+            </tr>
+            <tr>
+                <th> Weights </th>
+                <td> @weightToUse </td>
+            </tr>
+            <tr>
+                <th> Reps </th>
+                <td> @repsToDo </td>
+            </tr>
+            <tr>
+                <th> Comments </th>
+                <td> @currentExercise.PtComments </td>
+            </tr>
+            <tr>
+                <th> Reps Completed </th>
+                <td>
+                    <input type ="number" @bind="@repsDone" />
+                </td>  
+            </tr> 
+            <tr>
+                <th> Comments </th>
+                <td>
+                    <input form="Phone" class="form-control" type="text" @bind="@clientComments" />
+                </td>
+            </tr>
+            <tr>
+                <input type="button" class="io oi-arrow-right" @onclick="@NextSet" value="Next Set" />
+                <input type="button" class="io oi-arrow-right" @onclick="@NextExercise" value="Next Exercise" />
+                <input type="button" class="io oi-data-transfer-upload" @onclick="@Submit" value="Submit Workout" />
+            </tr>
+        </thead>
+
+    </table>
+}
+
+@code {
+
+    [Parameter]
+    public static string Id { get; set; }
+    [Parameter]
+    public static string ImagePath { get; set; }
+    [Parameter]
+    public static ClientsProgram currentExercise { get; set; }
+    [Parameter]
+    public static List<ClientsProgram> currentExerciseList { get; set; }
+    [Parameter]
+    public static int weightToUse { get; set; }
+    [Parameter]
+    public static int repsToDo { get; set; }
+    [Parameter]
+    public static string clientComments { get; set; } = " ";
+    [Parameter]
+    public static int repsDone { get; set; } = 0;
+    [Parameter]
+    public static int sets { get; set; }
+    [Parameter]
+    public static int setCounter { get; set; }
+
+    static int i = 0;
+    static List<int> weightList = new();
+    static List<int> repList = new();
+    static string clientCommentsAppended = string.Empty;
+    static string repsDoneString = string.Empty;
+    static DateTime startTime;
+
+    protected override void OnInitialized()
+    {
+        if (ProgramView.AllProgramExercises.Count < 1)
+        {
+            return;
+        }
+        i = 0;
+        currentExercise = new ClientsProgram();
+        currentExercise = ProgramView.AllProgramExercises[0];
+        startTime = DateTime.Now;
+        currentExercise.DateIssued = startTime.ToString();
+
+        currentExerciseList = new List<ClientsProgram>();
+        currentExerciseList.Add(currentExercise);
+
+        ViewCurrentExercise();
+    }
+
+    void ViewCurrentExercise()
+    {
+        weightList = new();
+        repList = new();
+        currentExercise = ProgramView.AllProgramExercises[i];
+
+        var weiSplitter = currentExercise.Weights.Split(",");
+        var repSplitter = currentExercise.Repetitions.Split(",");
+        foreach(var we in weiSplitter)
+        {
+            int a;
+            if(int.TryParse(we, out a))
+            {
+                weightList.Add(a);
+            }
+        } 
+        foreach (var re in repSplitter)
+        {
+            int a;
+            if (int.TryParse(re, out a))
+            {
+                repList.Add(a);
+            }
+        }
+
+        weightToUse = weightList[i];
+        repsToDo = repList[i];
+        sets = repList.Count;
+
+        var bitter = currentExercise.ImageGifLocation.Split("\\");
+        var bit = $"/{bitter[bitter.Length - 3]}/{bitter[bitter.Length - 2]}/{bitter[bitter.Length - 1]}";
+        ImagePath = bit;
+        i++;
+    }
+
+    protected void NextExercise()
+    {
+        ViewCurrentExercise();
+    }
+
+    protected async Task NextSet()
+    {
+        weightToUse = weightList[setCounter];
+        repsToDo = repList[setCounter];
+
+        clientCommentsAppended += $"{clientComments}, ";
+        clientComments = " ";
+
+        repsDoneString += $"{repsDone}, ";
+        repsDone = 0;
+
+        setCounter++;
+
+        if(setCounter == sets)
+        {
+            // currentExercise.ClientsComments = clientCommentsAppended;
+            clientCommentsAppended = string.Empty;
+
+            // currentExercise.RepsCompleted = repsDoneString;
+            repsDoneString = string.Empty;
+
+            currentExercise.DateIssued = (DateTime.Now.Date).ToString();
+            // currentExercise.TrainingTime = DateTime.Now - startTime;
+            // currentExercise.RestingTime = new TimeSpan(0,0,repsDone * 45);
+
+            currentExerciseList.Add(currentExercise);
+            setCounter = 0;
+
+            if (i == ProgramView.AllProgramExercises.Count)
+            {
+                // await apiClient.AddDoneProgram(currentExerciseList);
+                NavigaitonManager.NavigateTo("progress");
+                return;
+            }
+            ViewCurrentExercise();
+        }
+    }
+
+    protected void Submit()
+    {
+        NavigaitonManager.NavigateTo("exercises");
+    }
+}

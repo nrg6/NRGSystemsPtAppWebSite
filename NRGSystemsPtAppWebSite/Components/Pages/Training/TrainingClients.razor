@@ -1,0 +1,73 @@
+﻿@page "/trainClient/{title}"
+
+@using NRGSystemsPtAppWebSite.Models
+@using NRGSystemsPtAppWebSite.Services
+@inject FunctionRestService apiClient
+@inject NavigationManager NavigaitonManager
+
+
+
+@code {
+    [Parameter]
+    public string title { get; set; }
+
+    [Parameter]
+    public static List<ClientsProgram> aListOfPrograms { get; set; } = new();
+
+
+    [Parameter]
+    public int RepCounter { get; set; } = 0;
+
+
+
+    // this is used to make 4 copies if there are 4 sets.
+    // this is used to make the list of current circuit exercises
+    //public List<ClientsProgram> selectedExerciseList = [];
+    public int SelectedExerciseListCount = 0;
+
+
+
+    private ProgramReports _report = new();
+    private List<string> _weights = [];
+    private List<string> _reps = [];
+    private List<List<int>> circuitReps = [];
+    private List<List<int>> circuitWeight = [];
+    private List<ProgramReports> reportList = [];
+    //private int circuitCounter = 0;
+    public bool CompletedCircuit = false;
+    public bool IsCircuit = false;
+    public List<string> CircuitProgramWeightChecker = [];
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        aListOfPrograms = await Task.Run(() => apiClient.GetProgramListByTitle(title));
+
+        if (aListOfPrograms.Count == 0)
+            NavigaitonManager.NavigateTo($"ProgramView");
+
+        // check if program is a circuits or a rep/set
+        if(!TypeOfProgram(aListOfPrograms))
+            NavigaitonManager.NavigateTo($"trainRepSet/{title}");
+        else
+            NavigaitonManager.NavigateTo($"trainCircuits/{title}");
+    }
+    private bool TypeOfProgram(List<ClientsProgram> progList)
+    {
+        if (progList is null)
+            return false;
+
+        int i = 0;
+        foreach (var proggy in progList)
+        {
+            if (proggy.Weights.Contains(','))
+                i++;
+        }
+        if (i < 2)
+        {
+            return true;
+        }
+        return false;
+    }
+}
+

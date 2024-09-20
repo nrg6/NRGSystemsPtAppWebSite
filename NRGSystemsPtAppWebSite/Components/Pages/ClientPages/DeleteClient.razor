@@ -1,0 +1,68 @@
+﻿@page "/DeleteClient/{Id}"
+
+@using NRGSystemsPtAppWebSite;
+@using NRGSystemsPtAppWebSite.Models;
+@using NRGSystemsPtAppWebSite.Services
+@inject ClientRestFunctionServices apiClient
+@inject NavigationManager NavigaitonManager
+
+<h3>DeleteClient</h3>
+
+<hr />
+<form>
+    <div class="row">
+        <div class="col-md-8">
+            <div class="for-group">
+                <label for="Id" class="control-label"> Id</label>
+                <label> @obj.ID </label>
+            </div>
+            <div class="for-group">
+                <label for="Name" class="control-label">First Name</label>
+                <label>@obj.FirstName</label>
+            </div>
+            <div class="for-group">
+                <label for="LastName" class="control-label">Last Name</label>
+                <label> @obj.LastName</label>
+            </div>
+            <div class="for-group">
+                <label for="Email" class="control-label">Email</label>
+                <label> @obj.Email</label>
+            </div>
+            <div class="for-group">
+                <label for="Phone" class="control-label">Phone</label>
+                <label> @obj.Phone</label>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <input type="button" class="btn btn-primary" @onclick="@DeleteClientById" value="Delete Client" />
+                <input type="button" class="btn btn-danger" @onclick="@Cancel" value="Cancel" />
+            </div>
+        </div>
+    </div>
+</form>
+
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+    Clients obj = new Clients();
+
+    protected override async Task OnInitializedAsync()
+    {
+        obj = await Task.Run(() => apiClient.GetAClient(Convert.ToInt32(Id)));
+    }
+
+    protected async void DeleteClientById()
+    {
+        await apiClient.DeleteAClient(Convert.ToInt32(Id));
+        NavigaitonManager.NavigateTo("clients");
+    }
+
+    protected void Cancel()
+    {
+        NavigaitonManager.NavigateTo("clients");
+    }
+}

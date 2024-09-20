@@ -1,0 +1,136 @@
+﻿@page "/ModifyReportProgram"
+
+@using NRGSystemsPtAppWebSite;
+@using NRGSystemsPtAppWebSite.Models;
+@using NRGSystemsPtAppWebSite.Services
+
+@inject ClientRestFunctionServices apiClientClient
+@inject FunctionRestService apiClient
+@inject ExerciseRestFunction apiExerciseClient
+@inject NavigationManager NavigaitonManager
+
+<h5 style="color:#1e90ff">Update values for the next workout</h5>
+
+<hr />
+<form style="color:#1e90ff">
+    <div class="row">
+        <div class="col-md-8">
+
+            <div class="for-group">
+                <label for="Weights" class="control-label">Weights</label>
+                <input form="Weights" class="form-control" @bind="@program.Weights" />
+            </div>
+            <div class="for-group">
+                <label for="Reps" class="control-label">Reps</label>
+                <input form="Reps" class="form-control" @bind="@program.Repetitions" />
+            </div>
+            <div class="for-group">
+                <label for="PtsComments" class="control-label">PTs Comments</label>
+                <input form="PtsComments" class="form-control" @bind="@program.PtComments" />
+            </div>
+        </div>
+    </div>
+</form>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="form-group">
+            <input type="button" style="color:#1e90ff; margin:1rem" class="btn btn-primary" @onclick="@UpdateProgram" value="Submit" />
+        </div>
+    </div>
+</div>
+@* 
+<div class="row">
+    <div class="col-md-4">
+        <div class="form-group">
+            <input type="button" class="btn btn-primary" @onclick="@AddNewExercise" value="Add Another Exercise" />
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-4">
+        <div class="form-group">
+            <input type="button" class="io oi-flash" @onclick="@CreateNewProgram" value="Save Program" />
+        </div>
+    </div>
+</div>
+ *@
+@code {
+    [Parameter]
+    public List<string> allClients { get; set; } = new();
+    [Parameter]
+    public List<string> allExercises { get; set; } = new();
+    [Parameter]
+    public string selectedClient { get; set; } = string.Empty;
+    [Parameter]
+    public string selectedExercise { get; set; } = string.Empty;
+    [Parameter]
+    public string NameOfTheProgram { get; set; } = string.Empty;
+    [Parameter]
+    public ClientsProgram program { get; set; } = new();
+
+    [Parameter]
+    public EventCallback SelectNewExercise { get; set; } = new();
+
+
+    Clients client = new();
+    List<Clients> clientList = new();
+    List<Exercise> exerciseList = new();
+    List<ClientsProgram> programExerciseList = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        clientList = await Task.Run(() => apiClientClient.GetAllClients());
+        exerciseList = await Task.Run(() => apiExerciseClient.GetAllExercises());
+
+        Clients dummy = GetDummy();
+        clientList.Add(dummy);
+
+        foreach (var cli in clientList)
+        {
+            var mixString = $"{cli.ID} =-= {cli.FullName}";
+            allClients.Add(mixString);
+        }
+        foreach (var exe in exerciseList)
+        {
+            var mixString = $"{exe.ExerciseName} =+= {exe.ImageGif}";
+            allExercises.Add(mixString);
+        }
+
+    }
+
+    protected async Task CreateNewProgram() => await apiClient.AddNewProgramList(programExerciseList);
+
+    protected async Task UpdateProgram()
+    {
+        
+    }
+
+    protected async Task AddNewExercise()
+    {
+        await SelectNewExercise.InvokeAsync();
+    }
+
+    Clients GetDummy()
+    {
+        return new Clients()
+            {
+                ID = 0,
+                FirstName = "Template",
+                LastName = "Program",
+                UserName = "dum",
+                Password = "0",
+                Email = "",
+                Phone = "0",
+                DoB = DateTime.Now.Date,
+                Sex = "Male",
+                Height = 0,
+                Weight = 0,
+                Enabled = 0,
+                ProgramRevisionNo = "0",
+                ReportRevisionNo = "0",
+                MessageRevisionNo = "0"
+            };
+
+    }
+}

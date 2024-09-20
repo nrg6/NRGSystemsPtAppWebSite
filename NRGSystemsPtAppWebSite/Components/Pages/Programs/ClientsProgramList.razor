@@ -1,0 +1,90 @@
+﻿@page "/ClientsProgramList"
+
+@using NRGSystemsPtAppWebSite.Services
+@using NRGSystemsPtAppWebSite;
+@using NRGSystemsPtAppWebSite.Models;
+
+@inject FunctionRestService apiClient
+@inject ClientRestFunctionServices clientService
+@* @inject Clients selectedClient *@
+
+<h3 style="color: #1e90ff; font-family:Cooper">Programs</h3>
+
+@if (ListOfPrograms is null)
+{
+    <p><em>Loading ..........</em></p>
+}
+else
+{
+    <table class="table" style="color: #1e90ff; font-family:Cooper">
+        <thead>
+            <tr>
+                <th>  </th>
+                <th> Program Title </th>
+                <th> Date Issued </th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var program in ListOfSelectedPrograms)
+            {
+                <tr>
+                    <td>
+                        <a class="nav-link btn btn-primary" href="ProgramView/@program.ProgramTitle">
+                            <span class="oi oi-magnifying-glass" aria-hidden="true">Select Workout</span>
+                        </a>
+                    </td>
+                    <td>
+                        <a class="nav-link btn btn-primary" href="programReview/@program.ProgramTitle/@program.ClientId">
+                            <span class="oi oi-magnifying-glass" aria-hidden="true">Review Progress</span>
+                        </a>
+                    </td>
+                    <td> @program.ProgramTitle </td>
+                    <td> @program.DateIssued </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+@code {
+    [CascadingParameter]
+    public HttpContext? httpContext { get; set; }
+    [CascadingParameter]
+    public Clients? selectedClient { get; set; }
+
+    public static List<ClientsProgram> ListOfPrograms = new List<ClientsProgram>();
+    public static List<ClientsProgram> ListOfSelectedPrograms = new List<ClientsProgram>();
+
+
+    List<string> tempTitleList = new List<string>();
+
+    int clientsID;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // ********************************************
+        // TRYING TO GET THE CLIENTS ID FOR PROGRAM RETRIEVAL......
+        // ********************************************
+        foreach(var claim in httpContext.User.Claims)
+        {
+            if (claim.Type.Contains("sid"))
+            {
+                clientsID = int.Parse(claim.Value);
+            }
+        }
+
+        ListOfPrograms = new();
+        ListOfSelectedPrograms = new();
+        var aListOfPrograms = await apiClient.GetProgramListAsync(clientsID);
+
+        foreach (var program in aListOfPrograms)
+        {
+            if ((!tempTitleList.Contains(program.ProgramTitle))) //&& (program.ClientId == 0))
+            {
+                tempTitleList.Add(program.ProgramTitle);
+                ListOfSelectedPrograms.Add(program);
+            }
+        }
+    }
+}
+

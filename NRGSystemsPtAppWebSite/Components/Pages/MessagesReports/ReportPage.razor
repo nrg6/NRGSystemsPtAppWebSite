@@ -1,0 +1,182 @@
+﻿@page "/report"
+
+@using NRGSystemsPtAppWebSite.Models
+@using NRGSystemsPtAppWebSite.Services
+
+@inject FunctionRestService apiClient
+@inject NavigationManager NavigaitonManager
+
+@rendermode InteractiveServer
+
+@if (allReports is null)
+{
+    <p><em>Loading ..........</em></p>
+}
+else
+{
+    <tr>
+        <td>
+            <input type="button" style="color:#1e90ff;padding:1rem; margin:1rem" class="io oi-flash" @onclick="@ViewUnreadReports" value="Only View Unread Reports" />
+        </td>
+        <td>
+            <input type="button" style="color:#1e90ff; padding:1rem; margin:1rem" class="io oi-flash" @onclick="@ViewAllReports" value="View All Reports" />
+        </td>
+    </tr>
+
+    <table class="table" style="color:#1e90ff">
+        <thead>
+            <tr>
+                <th> Id </th>
+                <th> Clients Name </th>
+                <th> TimeOfSession </th>
+                <th> DateIssued </th>
+                <th> NameOfExercise </th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var report in viewReports)
+            {
+                <tr>
+                    <td> @report.ReportId </td>
+                    <td> @report.ClientName </td>
+                    <td> @report.TimeOfSession </td>
+                    <td> @report.DateIssued </td>
+                    <td> @report.NameOfExercise </td>
+                    <td>
+                        <input type="button" class="io oi-flash" style="color:#1e90ff;padding:1rem; margin:1rem" @onclick="()=>RespondTo(report.ReportId)" value="Respond" />
+                    </td>
+@*                     <td>
+                        <a class="nav-link btn btn-primary" href="EditReport/@report.ReportId">
+                            <span class="oi oi-pencil" aria-hidden="true"> Respond </span>
+                        </a>
+                    </td> *@
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+
+@code {
+    [CascadingParameter]
+    public HttpContext? httpContext { get; set; }
+
+    List<ProgramReports> allReports = [];
+    List<ProgramReports> readReports = [];
+    List<ProgramReports> unreadReports = [];
+    List<ProgramReports> viewReports = [];
+    ProgramReports currentReport = new();
+    int reportIndex = 0;
+    string reportRead = "";
+    int noOfUnreadReports;
+    int noOfReadReports;
+
+    public static int clientsID = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (httpContext is not null)
+        {
+            foreach (var claim in httpContext.User.Claims)
+            {
+                if (claim.Type.Contains("sid"))
+                {
+                    clientsID = int.Parse(claim.Value);
+                }
+            }
+        }
+
+        allReports = await apiClient.GetClientsReports(clientsID);
+
+        foreach (var rep in allReports)
+        {
+            var dateSplit = rep.TimeOfSession.Split('-');
+            rep.TimeOfSession = dateSplit[0];
+            if (rep.Reported > 0)
+            {
+                readReports.Add(rep);
+            }
+            else
+            {
+                unreadReports.Add(rep);
+            }
+        }
+        noOfReadReports = readReports.Count;
+        noOfUnreadReports = unreadReports.Count;
+
+        viewReports = unreadReports;
+
+        reportIndex = 0;
+        if (allReports.Count > 0)
+        {
+            currentReport = allReports[reportIndex];
+        }
+        setButtonText();
+    }
+
+    protected async Task ViewUnreadReports()
+    {
+        viewReports = unreadReports;
+        NavigaitonManager.NavigateTo("report");
+    }
+    protected async Task ViewAllReports()
+    {
+        viewReports = allReports;
+        NavigaitonManager.NavigateTo("report");
+    }
+
+    protected async Task RespondTo(int reportId)
+    {
+        NavigaitonManager.NavigateTo($"reportResponse/{reportId}");   
+    }
+
+    protected async Task NextReport()
+    {
+        reportIndex++;
+        if (reportIndex > allReports.Count)
+        {
+            reportIndex = 0;
+        }
+        else
+        {
+            if (allReports.Count > 0)
+            {
+
+                await apiClient.EditAReport(allReports[reportIndex - 1]);
+                currentReport = allReports[reportIndex];
+            }
+        }
+        setButtonText();
+    }
+    protected void PreviousReport()
+    {
+        reportIndex--;
+        if (reportIndex < 0)
+            reportIndex = 0;
+        if (allReports.Count > 0)
+        {
+            currentReport = allReports[reportIndex];
+        }
+        setButtonText();
+    }
+    protected void ReportHasBeenRead()
+    {
+        if (allReports.Count > 0)
+        {
+            allReports[reportIndex].Reported++;
+        }
+        setButtonText();
+    }
+    void setButtonText()
+    {
+        reportRead = "NO";
+        if (allReports.Count > 0)
+        {
+            if (allReports[reportIndex].Reported > 0)
+            {
+                reportRead = "YES";
+            }
+        }
+    }
+    }

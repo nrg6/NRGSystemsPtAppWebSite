@@ -1,0 +1,99 @@
+﻿@using NRGSystemsPtAppWebSite.Models
+ <table class="table" style="color:#1e90ff">
+    <thead>
+        <tr>
+            <h3 style="color:#1e90ff"> PTs Initial Comments</h3>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+                <h5 style="color:#1e90ff"> @program.PtComments </h5>
+            </td>
+        </tr>
+    </tbody>
+    <thead>
+        <tr>
+            <h3 style="color:#1e90ff"> Clients Comments</h3>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+                <h5 style="color:#1e90ff"> @currentReport.ClientsComments </h5>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<table class="table" style="color:#1e90ff">
+    <thead>
+        <tr id="ReportHeaders">
+            <th> Target (Weights)</th>
+            <th> Achieved (Weights) </th>
+            <th> Target (Reps) </th>
+            <th> Achieved (Reps) </th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+                @foreach (var we in targetWeights)
+                {
+                    <tr>
+                        <td>
+                            @we
+                        </td>
+                    </tr>
+                }
+        </td>
+        <td>
+            @foreach (var we in usedWeights)
+                {
+                    <tr>
+                        <td>
+                            @we
+                        </td>
+                    </tr>
+                }
+    </td>
+    <td>
+            @foreach (var we in targetReps)
+                {
+                    <tr>
+                        <td>
+                            @we
+                        </td>
+                    </tr>
+                }
+    </td>
+    <td>
+            @foreach (var we in achievedReps)
+                {
+                    <tr>
+                        <td>
+                            @we
+                        </td>
+                    </tr>
+                }
+    </td>
+    </tr>
+    </tbody>
+    </table>
+
+@code 
+{
+    [Parameter]
+    public ClientsProgram program { get; set; } = new();
+    [Parameter]
+    public ProgramReports? currentReport { get; set; } = new();
+
+    [Parameter]
+    public List<double> targetWeights { get; set; } = [];
+    [Parameter]
+    public List<double> usedWeights { get; set; } = [];
+    [Parameter]
+    public List<double> targetReps { get; set; } = [];
+    [Parameter]
+    public List<double> achievedReps { get; set; } = [];
+}

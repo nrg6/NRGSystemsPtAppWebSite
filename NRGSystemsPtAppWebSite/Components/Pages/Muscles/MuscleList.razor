@@ -1,0 +1,66 @@
+﻿@page "/muscles"
+
+@using NRGSystemsPtAppWebSite.Services
+@using NRGSystemsPtAppWebSite;
+@using NRGSystemsPtAppWebSite.Models;
+@inject FunctionRestService apiClient
+@inject NavigationManager NavigaitonManager
+
+<h1 style="font-family:Cooper; color:#1e90ff">Muscles</h1>
+
+
+@if (muscObject is null)
+{
+    <p><em>Loading ..........</em></p>
+}
+else
+{
+    <table class="table" style="color:#1e90ff; font-family:Cooper">
+        <thead>
+            <tr style="color:#1e90ff">
+                <th> NAME </th>
+                <th> IMAGE </th>
+                <th> LOCATION </th>
+                <th> INSERTION </th>
+                <th> ORIGIN </th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var muscle in muscObject)
+            {
+                <tr>
+                    <td style="color:#1e90ff"> @muscle.Name </td>
+                    <td>
+                        <img src="@muscle.Image" width="100" height="100" />
+                    </td>
+                    <td style="color:#1e90ff"> @muscle.Location </td>
+                    <td style="color:#1e90ff"> @muscle.Insertion </td>
+                    <td style="color:#1e90ff"> @muscle.Origin </td>
+
+                    <td>
+                        <a class="nav-link btn btn-info" href="ViewMuscle/@muscle.StringName">
+                            <span style="color:deeppink; font-size:large; font-weight:bold" class="oi oi-trash" aria-hidden="true"> VIEW </span>
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+@code {
+    public List<Muscle> muscObject = new List<Muscle>();
+
+    protected override void OnInitialized()
+    {
+        int i = 0;
+        foreach (var muscle in Muscles.GetMuscles())
+        {
+            muscle.MuscleId = i;
+            i++;
+            muscObject.Add(muscle);
+        }
+    }
+
+}
+

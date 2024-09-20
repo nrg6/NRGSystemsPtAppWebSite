@@ -1,0 +1,534 @@
+﻿@page "/reportResponse/{reportId}"
+
+@using NRGSystemsPtAppWebSite.Models
+@using NRGSystemsPtAppWebSite.Services
+@* @using ProgrammerComponents *@
+
+@inject FunctionRestService apiClient
+@inject ExerciseRestFunction exerciseClient
+@inject NavigationManager NavigaitonManager
+@inject CommentsColumn commentColumns
+
+@rendermode InteractiveServer
+
+<PageTitle>
+    <h2> Report for @currentReport.ClientName </h2>
+    <label for="ProgramName" class="control-label">@program.ProgramTitle</label>
+</PageTitle>
+
+<h4 style="color:#1e90ff"> @program.NameOfExercise </h4>
+
+<table class="table" style="color:#1e90ff">
+    <thead>
+        <tr id="ReportHeaders">
+            <th> 
+                <ProgramExerciseList ProgramList="programList"
+                                     NewEdit=@UpdateProgramOption 
+                                     NewSubmission=@SubmitProgram />
+            </th>
+            <th> 
+                <ReportView achievedReps="achievedReps"
+                            currentReport="currentReport"
+                            program="program"
+                            targetReps="targetReps"
+                            targetWeights="targetWeights"
+                            usedWeights="usedWeights"></ReportView>
+            </th> 
+        </tr>
+    </thead>
+</table>
+
+<table class="table">
+    <thead>
+        <tr >
+            <th>
+                <ModifyReportProgram program="program"
+                                     SelectNewExercise=@OpenExerciseSelector />
+            </th>
+            <th> 
+                <NewExerciseSelector allExercises="exerciseList" />
+            </th>
+        </tr>
+    </thead>
+</table>
+
+
+@code {
+    [Parameter]
+    public string reportId { get; set; } = string.Empty;
+    [Parameter]
+    public int repWeighIndex { get; set; }
+    [Parameter]
+    public List<double> targetWeights { get; set; } = [];
+    [Parameter]
+    public List<double> usedWeights { get; set; } = [];
+    [Parameter]
+    public List<double> targetReps { get; set; } = [];
+    [Parameter]
+    public List<double> achievedReps { get; set; } = [];
+    [Parameter]
+    public ProgramReports? currentReport { get; set; } = new();
+    [Parameter]
+    public ClientsProgram program { get; set; } = new();
+    [Parameter]
+    public List<string> programExerciseList { get; set; } = [];
+    [Parameter]
+    public int reportIndex { get; set; } = 0;
+    [Parameter]
+    public string PtsInitialComments { get; set; }
+    [Parameter]
+    public string ClientsComments { get; set; }
+    [Parameter]
+    public string PtsNewComments { get; set; }
+
+    List<ProgramReports> reportList = new();
+    List<ClientsProgram> programList = new();
+    List<Exercise> exerciseList = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await InitialiseComponents();
+
+        commentColumns.PtsInitialComments = program.PtComments;
+        commentColumns.ClientsComments = currentReport.ClientsComments;
+
+        repWeighIndex = 0;
+    }
+    private async Task InitialiseComponents()
+    {
+        await PopulateLists();
+
+        ExtractValuesFromLists();
+    }
+
+
+    private async Task PopulateLists()
+    {
+        reportList = await apiClient.GetReportListAsync(int.Parse(reportId));
+        if (reportList.Count == 0)
+            return;
+
+        currentReport = reportList[0];
+        program = await apiClient.GetProgramFromProgramId(currentReport.ProgramId);
+
+        programList = await apiClient.GetProgramListByTitle(program.ProgramTitle);
+        exerciseList = await exerciseClient.GetAllExercises();
+    }
+
+    private void ExtractValuesFromLists()
+    {
+        programExerciseList = [];
+        foreach (var pro in programList)
+        {
+            programExerciseList.Add(pro.NameOfExercise);
+        }
+
+        //var crTimeOfSession_Date = DateTime.Parse(currentReport.TimeOfSession).Date;
+        currentReport.TimeOfSession = DateTime.Parse(currentReport.TimeOfSession).TimeOfDay.ToString();
+
+        // var spli = currentReport.TimeOfSession.Split('-');
+
+        // if (spli[0].Contains(' '))
+        // {
+        //     var spli1 = spli[0].Split(' ');
+        //     if (spli[1].Contains('.'))
+        //     {
+        //         var spli2 = spli[1].Split('.');
+        //         currentReport.TimeOfSession = $"{spli1[0]} {spli2[0]}";
+        //     }
+        // }
+
+        targetWeights = [];
+        usedWeights = [];
+        targetReps = [];
+        achievedReps = [];
+
+        WeightRepSplitter();
+        reportIndex = 0;
+    }
+
+    private void WeightRepSplitter()
+    {
+        string[] stArr = currentReport.RepsCompleted.Split(' ');
+        if(stArr.Length == 1)
+        {
+            achievedReps.Add(double.Parse(currentReport.RepsCompleted));
+            usedWeights.Add(double.Parse(currentReport.Weights));
+            targetWeights.Add(double.Parse(program.Weights));
+            targetReps.Add(double.Parse(program.Repetitions));
+        }
+
+        if(stArr.Length > 1)
+        {
+        for (int i = 0; i < 2; i++)
+        {
+
+            foreach (var sp in stArr)
+            {
+                if (sp.Contains("-"))
+                {
+                    var spli1 = sp.Split('-');
+                    int cou = spli1.Count();
+                    if (cou > 1)
+                    {
+                        if (i == 0)
+                        {
+                            targetReps.Add(double.Parse(spli1[0]));
+                            achievedReps.Add(double.Parse(spli1[1]));
+                            stArr = currentReport.Weights.Split(' ');
+                        }
+                        else
+                        {
+                            targetWeights.Add(double.Parse(spli1[0]));
+                            usedWeights.Add(double.Parse(spli1[1]));
+                        }
+                    }
+                }
+                }
+            }
+        }
+    }
+
+
+    protected async Task SubmitProgram(ClientsProgram value)
+    {
+    }    
+
+
+    protected async Task OpenExerciseSelector()
+    {
+        // NewExerciseSelector exs = new();
+    }
+    protected async Task UpdateProgramOption(ClientsProgram value)
+    {
+        program = value;
+        ExtractValuesFromLists();
+        commentColumns.PtsInitialComments = program.PtComments;
+        commentColumns.ClientsComments = currentReport.ClientsComments;
+    }
+
+    protected async Task EdiProgram()
+    {
+        repWeighIndex = 0;
+        NavigaitonManager.NavigateTo($"editProgram/{currentReport.ProgramId}/{currentReport.ReportId}");
+     }
+    
+    
+    protected async Task Cancel()
+    {
+    }
+    
+    
+    protected async Task somming()
+    {
+    }
+
+
+    protected async Task GoToNextReport()
+    {
+    }
+
+    
+
+    // foreach (var sp in spli)
+    // {
+    //     if (sp.Contains("-"))
+    //     {
+    //         var spli1 = sp.Split('-');
+    //         int cou = spli1.Count();
+    //         if (cou > 1)
+    //         {
+    //             targetWeights.Add(double.Parse(spli1[0]));
+    //             usedWeights.Add(double.Parse(spli1[1]));
+    //         }
+    //     }
+    // }
+    // foreach (var sp in spli)
+    // {
+    //     if (sp.Contains("-"))
+    //     {
+    //         var spli1 = sp.Split('-');
+    //         int cou = spli1.Count();
+    //         if (cou > 1)
+    //         {
+    //             targetReps.Add(double.Parse(spli1[0]));
+    //             achievedReps.Add(double.Parse(spli1[1]));
+    //         }
+    //     }
+    // }
+
+
+    // reportList = await apiClient.GetReportListAsync(int.Parse(reportId));
+        // if (reportList.Count == 0)
+        //     return;
+
+        // currentReport = reportList[0];
+        // program = await apiClient.GetProgramFromProgramId(currentReport.ProgramId);
+
+        // programList = await apiClient.GetProgramListByTitle(program.ProgramTitle);
+        // programExerciseList = [];
+        // foreach(var pro in programList)
+        // {
+        //     programExerciseList.Add(pro.NameOfExercise);
+        // }
+
+
+        // var spli = currentReport.TimeOfSession.Split('-');
+
+        // if (spli[0].Contains(' '))
+        // {
+        //     var spli1 = spli[0].Split(' ');
+        //     if (spli[1].Contains('.'))
+        //     {
+        //         var spli2 = spli[1].Split('.');
+        //         currentReport.TimeOfSession = $"{spli1[0]} {spli2[0]}";
+        //     }
+        // }
+
+        // spli = currentReport.Weights.Split(' ');
+        // targetWeights = [];
+        // usedWeights = [];
+        // targetReps = [];
+        // achievedReps = [];
+
+        // foreach (var sp in spli)
+        // {
+        //     if (sp.Contains("-"))
+        //     {
+        //         var spli1 = sp.Split('-');
+        //         int cou = spli1.Count();
+        //         if (cou > 1)
+        //         {
+        //             targetWeights.Add(double.Parse(spli1[0]));
+        //             usedWeights.Add(double.Parse(spli1[1]));
+        //         }
+        //     }
+        // }
+
+        // spli = currentReport.RepsCompleted.Split(' ');    // spli = currentReport.RepsCompleted.Split(' ');
+        // foreach(var sp in spli)
+        // {
+        //     if (sp.Contains("-"))
+        //     {
+        //         var spli1 = sp.Split('-');
+        //         int cou = spli1.Count();
+        //         if(cou > 1)
+        //         {
+        //             targetReps.Add(double.Parse(spli1[0]));
+        //             achievedReps.Add(double.Parse(spli1[1]));
+        //         }
+        //     }
+        // }
+
+
+
+
+    // protected async Task ViewUnreadReports()
+    // {
+    //     viewReports = unreadReports;
+    //     NavigaitonManager.NavigateTo("report");
+    // }
+    // protected async Task ViewAllReports()
+    // {
+    //     viewReports = allReports;
+    //     NavigaitonManager.NavigateTo("report");
+    // }
+
+    // protected async Task RespondTo(int reportId)
+    // {
+    //     NavigaitonManager.NavigateTo($"reportResponse/{reportId}");
+
+    // }
+
+    // protected async Task NextReport()
+    // {
+    //     reportIndex++;
+    //     if (reportIndex > allReports.Count)
+    //     {
+    //         reportIndex = 0;
+    //     }
+    //     else
+    //     {
+    //         await apiClient.EditAReport(allReports[reportIndex - 1]);
+    //         currentReport = allReports[reportIndex];
+    //     }
+    //     setButtonText();
+    // }
+    // protected void PreviousReport()
+    // {
+    //     reportIndex--;
+    //     if (reportIndex < 0)
+    //         reportIndex = 0;
+
+    //     currentReport = allReports[reportIndex];
+    //     setButtonText();
+    // }
+    // protected void ReportHasBeenRead()
+    // {
+    //     allReports[reportIndex].Reported++;
+    //     setButtonText();
+    // }
+    // void setButtonText()
+    // {
+    //     reportRead = "NO";
+    //     if (allReports[reportIndex].Reported > 0)
+    //     {
+    //         reportRead = "YES";
+    //     }
+    // }
+    
+
+
+
+    /*
+
+<table class="table">
+    <thead>
+        <tr>
+
+            <th> Id </th>
+            <th> Clients Name </th>
+            <th> Reported </th>
+            <th> TimeOfSession </th>
+            <th> Program ID </th>
+            <th> DateIssued </th>
+            <th> NameOfExercise </th>
+            <th> Weights </th>
+            <th> RepsCompleted </th>
+            <th> TrainingTime </th>
+            <th> RestingTime </th>
+            <th> ClientsComments </th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var report in viewReports)
+        {
+            <tr>
+                <td> @report.ReportId </td>
+                <td> @report.ClientName </td>
+                <td> @report.Reported </td>
+                <td> @report.TimeOfSession </td>
+                <td> @report.ProgramId </td>
+                <td> @report.DateIssued </td>
+                <td> @report.NameOfExercise </td>
+                <td> @report.Weights </td>
+                <td> @report.RepsCompleted </td>
+                <td> @report.TrainingTime </td>
+                <td> @report.RestingTime </td>
+                <td> @report.ClientsComments </td>
+                <td>
+                    <a class="nav-link btn btn-primary" href="EditReport/@report.ReportId">
+                        <span class="oi oi-pencil" aria-hidden="true"> Edit </span>
+                    </a>
+                </td>
+                <td>
+                    <a class="nav-link btn btn-danger" href="DeleteReport/@report.ReportId">
+                        <span class="oi oi-trash" aria-hidden="true"> Delete </span>
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+*/
+    @* <table class="table" style="color:#1e90ff">
+                    <thead>
+                        <tr>
+                            <h3 style="color:#1e90ff"> PTs Initial Comments</h3>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <h5 style="color:#1e90ff"> @program.PtComments </h5>
+                            </td>
+                        </tr>
+                    </tbody>
+                    <thead>
+                        <tr>
+                            <h3 style="color:#1e90ff"> Clients Comments</h3>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <h5 style="color:#1e90ff"> @currentReport.ClientsComments </h5>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+@*                 <CommentsColumn PtsInitialComments=@PtsInitialComments
+                            ClientsComments=@ClientsComments />
+            </th>
+             <th>
+                <table class="table" style="color:#1e90ff">
+                    <thead>
+                        <tr id="ReportHeaders">
+                            <th> Target (Weights)</th>
+                            <th> Achieved (Weights) </th>
+                            <th> Target (Reps) </th>
+                            <th> Achieved (Reps) </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                @foreach (var we in targetWeights)
+                                {
+                                    <tr>
+                                        <td>
+                                            @we
+                                        </td>
+                                    </tr>
+                                }
+                            </td>
+                            <td>
+                                @foreach (var we in usedWeights)
+                                {
+                                    <tr>
+                                        <td>
+                                            @we
+                                        </td>
+                                    </tr>
+                                }
+                            </td>
+                            <td>
+                                @foreach (var we in targetReps)
+                                {
+                                    <tr>
+                                        <td>
+                                            @we
+                                        </td>
+                                    </tr>
+                                }
+                            </td>
+                            <td>
+                                @foreach (var we in achievedReps)
+                                {
+                                    <tr>
+                                        <td>
+                                            @we
+                                        </td>
+                                    </tr>
+                                }
+                            </td>
+
+                            @*       //                    reportIndex++;
+    }
+                         <tr>
+                            <td>
+                                <a class="nav-link btn btn-primary" href="editReportProgram/@currentReport.ProgramId/@currentReport.ReportId">
+                                    <span class="oi oi-magnifying-glass" aria-hidden="true">Edit Program</span>
+                                </a>
+                            </td>
+                            <td>
+                                <a class="nav-link btn btn-primary" href="report">
+                                    <span class="oi oi-magnifying-glass" aria-hidden="true">Report List</span>
+                                </a>
+                            </td>
+                        </tr>
+                    </tr>
+                </tbody>
+            </table>*@
+}

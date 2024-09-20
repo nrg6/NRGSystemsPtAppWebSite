@@ -2,6 +2,7 @@
     position: relative;
     display: flex;
     flex-direction: column;
+    background-color: #2B0B98;
 }
 
 main {
@@ -9,13 +10,14 @@ main {
 }
 
 .sidebar {
-    background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
+    /*background-image: linear-gradient(180deg, rgb(5, 6, 180) 0%, rgb(6, 7, 225) 70%);*/
+    background-image: linear-gradient(180deg, rgb(14, 144, 255) 0%, rgb(43, 11, 152) 70%);
 }
 
 .top-row {
-    background-color: #f7f7f7;
+    background-color: #1e90ff;
     border-bottom: 1px solid #d6d5d5;
-    justify-content: flex-end;
+    justify-content: center;
     height: 3.5rem;
     display: flex;
     align-items: center;

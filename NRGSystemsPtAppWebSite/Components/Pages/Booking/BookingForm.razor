@@ -1,0 +1,197 @@
+﻿@using NRGSystemsPtAppWebSite.Models
+@using NRGSystemsPtAppWebSite.Services
+@using Microsoft.AspNetCore.Authentication
+
+@inject NavigationManager NavigaitonManager
+@inject ClientRestFunctionServices apiClient
+@inject CalendarFunctionServices apiCalendar
+@inject SweetAlertService sweetAlertService
+
+@rendermode InteractiveServer
+
+
+<form>
+     <div class="row">
+        <div class="col-md-8">
+            <div class="for-group">
+                <label for="BookingClient" class="control-label">BookingClient</label>
+                <input form="BookingClient" class="form-control" @bind="@FullName" />
+            </div>
+@*             <div class="for-group">
+                <label for="IsEmpty" class="control-label">Is Empty</label>
+                <input form="IsEmpty" class="form-control" @bind="@newBooking.IsEmpty" />
+            </div> *@
+           <div class="for-group">
+                <label for="DateBookingMade" class="control-label">DateBookingMade</label>
+                <input form="DateBookingMade" class="form-control" @bind="@newBooking.DateBookingMade" />
+            </div>
+            <div class="for-group">
+                <label for="BookingDate" class="control-label">BookingDate</label>
+                <input form="BookingDate" class="form-control" @bind="@DateSelected" />
+            </div>
+            <div class="for-group">
+                <div class="col-sm-12 col-lg-2">
+                    <label for="StartTime" class="control-label">Start Time</label>
+                    <select name=" " id=" " class="fluent-input" @onchange="SelectTime">
+                        @foreach (var goal in Times)
+                        {
+                            <option>@goal</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="for-group">
+                <label for="Duration" class="control-label">Duration</label>
+                <select name=" " id=" " class="fluent-input" @onchange="SelectDuration">
+                    @foreach (var goal in Durations)
+                    {
+                        <option>@goal</option>
+                    }
+                </select>
+            </div>
+            <div class="for-group">
+                <div class="col-sm-12 col-lg-2">
+                    <label for="Goals" class="control-label">Goals</label>
+                    <select name=" " id=" " class="fluent-input" @onchange="SelectGoal">
+                        @foreach (var goal in GoalList)
+                        {
+                            <option>@goal</option>
+                        }
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div> 
+    <br />
+    <br />
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                @* <button class="btn btn-primary" @onclick="MakeAppointment">Commit to appointment</button> *@
+                <br />
+                <input type="button" class="btn btn-danger" @onclick="@Cancel" value="Cancel" />
+            </div>
+        </div>
+    </div>
+</form>
+
+@code {
+    [CascadingParameter]
+    public HttpContext httpContext { get; set; }
+    [Parameter]
+    public CalendarEvents newBooking { get; set; } = new();
+    [Parameter]
+    public string FullName { get; set; } = "";
+    [Parameter]
+    public string Goal { get; set; } = "";
+    [Parameter]
+    public string DateSelected { get; set; } = "";
+    [Parameter]
+    public string[] GoalList { get; set; }  = new[] { "Weight Management", "Strength", "Sports Specific", "Longevity", "Size" };
+    [Parameter]
+    public List<string> Times { get; set; } = new List<string> { "7:00", "8:00", "9:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00" };
+    [Parameter]
+    public List<string> Durations { get; set; } = new List<string> { "0:15", "0:30", "0:45", "1:00", "1:15", "1:30", "1:45", "2:00"};
+
+    public static int clientsID = 0;
+
+    private Clients ClientBooking;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (httpContext is not null)
+        {
+            foreach (var claim in httpContext.User.Claims)
+            {
+                if (claim.Type.Contains("sid"))
+                {
+                    clientsID = int.Parse(claim.Value);
+                }
+            }
+        }
+        if (clientsID != 0)
+        {
+            var dbookingClient = await apiClient.GetAClient(clientsID);
+
+            ClientBooking = new Clients()
+            {
+                DoB = dbookingClient.DoB,
+                Email = dbookingClient.Email,
+                Enabled = dbookingClient.Enabled,
+                FirstName = dbookingClient.FirstName,
+                Height = dbookingClient.Height,
+                ID = dbookingClient.ID,
+                LastName = dbookingClient.LastName,
+                MessageRevisionNo = dbookingClient.MessageRevisionNo,
+                Password = dbookingClient.Password,
+                Phone = dbookingClient.Phone,
+                ProgramRevisionNo = dbookingClient.ProgramRevisionNo,
+                ReportRevisionNo = dbookingClient.ReportRevisionNo,
+                Sex = dbookingClient.Sex,
+                UserName = dbookingClient.UserName,
+                Weight = dbookingClient.Weight,
+                };
+
+            FullName = $"{dbookingClient.FirstName} {dbookingClient.LastName}";
+            // newBooking.BookingClient = bookingClient;
+        }
+
+        newBooking = new();
+        newBooking.IsEmpty = true;
+        newBooking.DateBookingMade = DateTime.UtcNow.ToString();
+        // newBooking.BookingDate = DateTime.Parse(BookingCalendar.JournalDate);
+        newBooking.StartTime = "";
+        newBooking.Duration = "";
+        newBooking.Goal = "";
+    }
+
+    // public async Task MakeAppointment()
+    // {
+    //     // var startingTime = $"{DateTime.Parse(BookingCalendar.BookingTime)}";
+    //     // var endingTime = $"{DateTime.Parse(BookingCalendar.BookingTime)}";
+    //     // var endingTime2 = DateTime.Parse(BookingCalendar.BookingTime);
+    //     // var endTimes = $"{TimeSpan.FromHours(1)}";
+
+    //     // newBooking = new();
+    //     if (newBooking.Goal == "")
+    //         newBooking.Goal = "Weight Management";
+
+    //     newBooking.IsEmpty = false;
+    //     newBooking.DateBookingMade = DateTime.UtcNow.ToString();
+    //     newBooking.BookingDate = BookingCalendar.JournalDate;
+    //     newBooking.BookingClientId = ClientBooking.ID;
+
+    //     var result = await sweetAlertService.FireAsync(new SweetAlertOptions
+    //         {
+    //             Title = "Confirmation",
+    //             Text = "Do you want to make this appointment?",
+    //             Icon = SweetAlertIcon.Warning,
+    //             ShowCancelButton = true,
+    //             ConfirmButtonText = "Yes, I want to make this appointment",
+    //             CancelButtonText = "No, I need to check my diary."
+    //         });
+
+    //     var confirm = !string.IsNullOrEmpty(result.Value);
+    //     if (confirm)
+    //     {
+    //         BookingCalendar.NewBookings.Add(newBooking);
+    //         var x = await apiCalendar.CreateACalendarEvent(newBooking);
+    //     }
+    // }
+    void Cancel()
+    {
+
+    }
+    private void SelectGoal(ChangeEventArgs e)
+    {
+        newBooking.Goal = e.Value.ToString();
+    }
+    private void SelectTime(ChangeEventArgs e)
+    {
+        newBooking.StartTime = e.Value.ToString();
+    }
+    private void SelectDuration(ChangeEventArgs e)
+    {
+        newBooking.Duration = e.Value.ToString();
+    }
+}

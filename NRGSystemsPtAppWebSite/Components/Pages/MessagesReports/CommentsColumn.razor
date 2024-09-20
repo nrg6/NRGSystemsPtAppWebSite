@@ -1,0 +1,36 @@
+﻿<h3>CommentsColumn</h3>
+<table class="table">
+<thead>
+    <tr>
+        <th> PTs Initial Comments</th>
+    </tr>
+</thead>
+<tbody>
+    <tr>
+        <td>
+            <label> @PtsInitialComments </label> 
+        </td>
+    </tr>
+</tbody>
+<thead>
+    <tr>
+        <th> Clients Comments</th>
+    </tr>
+</thead>
+<tbody>
+    <tr>
+        <td>
+            <label ClientsComments/>
+        </td>
+    </tr>
+</tbody>
+</table>
+
+
+@code {
+    [Parameter]
+    public string PtsInitialComments { get; set; } 
+    [Parameter]
+    public string ClientsComments { get; set; }
+
+}

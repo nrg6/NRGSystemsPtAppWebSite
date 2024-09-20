@@ -1,0 +1,130 @@
+﻿@page "/downloadShit"
+
+@using System.IO
+@using Microsoft.AspNetCore.Http
+@using System.Reflection.Metadata
+@inject IJSRuntime JS
+
+@rendermode InteractiveServer
+
+<table cellpadding="30" cellspacing="30" border="1" style="background-color:#1e90ff; padding:3rem; margin:3rem">
+    <thead style="align-content:center; column-gap:3rem; background-color:black; padding:3rem; margin:3rem">
+        <tr>
+            <th width="@Widths">
+                <label style="font-weight:800; font-size:xx-large; text-align:center; color:#1e90ff">ANDROID</label>
+            </th>
+            <th width="@Widths">
+                <label style="align-content:center; font-size:xx-large; font-weight:800; color:#1e90ff">APPLE</label>
+            </th>
+            <th width="@Widths">
+                <label style="font-weight:800; font-size:xx-large; color:#1e90ff">iOS</label>
+            </th>
+        </tr>
+    </thead>
+    <tbody style="background-color:black">
+        <tr>
+            <td style="background-color:#1e90ff">
+@*                 <a id="exportCsv" class="btn" href="and_aab" download="realsteelapp.aab"
+                   role="button" target="=_top">app</a> *@
+                <img src="@AndroidIcon" width="@Widths" height="@Widths" @onclick="DownloadAndroidFile" margin="5rem" />
+            </td>
+            <td style="background-color:#1e90ff">
+                <img src="@AppleIcon" width="@Widths" height="@Widths" @onclick="DownloadAppleFile" />
+            </td>
+            <td style="background-color:#1e90ff" >
+                <img src="@IosIcon" width="@Widths" height="@Widths" style="align-content:center" @onclick="DownloadIosFile" />
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+
+@* <MudButton OnClick="DownloadFile" >download shit..</MudButton> *@
+
+<script>
+    window.triggerFileDownload = function (fileName, fileURL) {
+        var anchor = document.createElement('a');
+        anchor.href = fileURL;
+        anchor.download = fileName;
+        anchor.click();
+    }
+</script>
+
+
+@code {
+    [Parameter]
+    public string AndroidIcon { get; set; } = "https://nrgptappstorage.blob.core.windows.net/appimages/android-black.png";
+    [Parameter]
+    public string AppleIcon { get; set; } = "https://nrgptappstorage.blob.core.windows.net/appimages/apple.png.png";
+    
+    [Parameter]
+    public string IosIcon { get; set; } = "https://nrgptappstorage.blob.core.windows.net/appimages/ios.png.png";
+    
+    [Parameter]
+    public string ios { get; set; } = "https://nrgptappstorage.blob.core.windows.net/apps/RealSteelPtApp.ipa";
+    [Parameter]
+    public string and_aab { get; set; } = "https://nrgptappstorage.blob.core.windows.net/apps/com.nrgsystems.realsteelptapp-Signed.aab";
+    
+    [Parameter]
+    public string and_apk { get; set; } = "https://nrgptappstorage.blob.core.windows.net/apps/com.nrgsystems.realsteelptapp-Signed.apk";
+
+    [Parameter]
+    public int Widths { get; set; } = 250;
+
+    async Task DownloadAndroidFile()
+    {
+        try
+        {
+            var fileName = "realsteel.aab";
+            await JS.InvokeVoidAsync("triggerFileDownload", fileName, and_aab);
+        }
+        catch(Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+    }
+    
+    async Task DownloadAppleFile()
+    {
+        try
+        {
+            var fileName = "realsteel.apk";
+            await JS.InvokeVoidAsync("triggerFileDownload", fileName, and_apk);
+        }
+        catch(Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+    }
+    
+    async Task DownloadIosFile()
+    {
+        try
+        {
+            var fileName = "realsteel.ipa";
+            await JS.InvokeVoidAsync("triggerFileDownload", fileName, ios);
+        }
+        catch(Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+    }
+
+    private Stream GetFileStream()
+    {
+        var randomBinaryData = new byte[50 * 1024];
+        var fileStream = new MemoryStream(randomBinaryData);
+
+        return fileStream;
+    }
+
+    private async Task DownloadFileFromStream()
+    {
+        var fileStream = GetFileStream();
+        var fileName = "log.bin";
+
+        using var streamRef = new DotNetStreamReference(stream: fileStream);
+
+        await JS.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
+    }
+}

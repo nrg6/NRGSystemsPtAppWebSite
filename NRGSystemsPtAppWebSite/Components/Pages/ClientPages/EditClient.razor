@@ -1,0 +1,77 @@
+﻿@page "/EditClient/{Id}"
+
+@using NRGSystemsPtAppWebSite;
+@using NRGSystemsPtAppWebSite.Models;
+@using NRGSystemsPtAppWebSite.Services
+@inject ClientRestFunctionServices apiClient
+@inject NavigationManager NavigaitonManager
+
+<h3>Edit Client</h3>
+
+<hr />
+<form>
+    <div class="row">
+        <div class="col-md-8">
+            <div class="for-group">
+                <label for="Id" class="control-label"> Id</label>
+                <input form="Id" class="form-control" @bind="@obj.ID" />
+            </div>
+            <div class="for-group">
+                <label for="Name" class="control-label">First Name</label>
+                <input form="FirstName" class="form-control" @bind="@obj.FirstName" />
+            </div>
+            <div class="for-group">
+                <label for="LastName" class="control-label">Last Name</label>
+                <input form="LastName" class="form-control" @bind="@obj.LastName" />
+            </div>
+            <div class="for-group">
+                <label for="UserName" class="control-label">User Name</label>
+                <input form="UserName" class="form-control" @bind="@obj.UserName" />
+            </div>
+            <div class="for-group">
+                <label for="Password" class="control-label">Password</label>
+                <input form="Password" class="form-control" @bind="@obj.Password" />
+            </div>
+            <div class="for-group">
+                <label for="Email" class="control-label">Email</label>
+                <input form="Email" class="form-control" @bind="@obj.Email" />
+            </div>
+            <div class="for-group">
+                <label for="Phone" class="control-label">Phone</label>
+                <input form="Phone" class="form-control" @bind="@obj.Phone" />
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <input type="button" class="btn btn-primary" @onclick="@UpdateClient" value="Update Client" />
+                <input type="button" class="btn btn-danger" @onclick="@Cancel" value="Cancel" />
+            </div>
+        </div>
+    </div>
+</form>
+
+
+@code {
+    [Parameter]
+    public string? Id { get; set; }
+
+    Clients? obj = new Clients();
+
+    protected override async Task OnInitializedAsync()
+    {
+        obj = await Task.Run(() => apiClient.GetAClient(Convert.ToInt32(Id)));
+    }
+
+    protected async void UpdateClient()
+    {
+        await apiClient.EditAClient(obj);
+        NavigaitonManager.NavigateTo("clients");
+    }
+
+    protected void Cancel()
+    {
+        NavigaitonManager.NavigateTo("clients");
+    }
+}

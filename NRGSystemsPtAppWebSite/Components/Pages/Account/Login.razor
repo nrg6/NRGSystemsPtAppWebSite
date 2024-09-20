@@ -1,0 +1,95 @@
+﻿@page "/login"
+
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+@using System.Security.Claims
+@using NRGSystemsPtAppWebSite.Models
+@using NRGSystemsPtAppWebSite.Services
+@using NRGSystemsPtAppWebSite.ViewModels
+@inject ClientRestFunctionServices clientService
+@inject NavigationManager navMan
+
+<div class="row">
+    <div class="col-lg-4 offset-lg-4 pt-4 pb-4 border" style="color:#1e90ff">
+        <EditForm Model="@Model" OnValidSubmit="Authenticate" FormName="LoginForm">
+            <DataAnnotationsValidator/>
+            <div class="mb-3 text-center flex-column">
+                <img src="https://nrgptappstorage.blob.core.windows.net/appimages/nrglogo.png" style="max-height:5rem;" />
+                <h3 style="font-family:Cooper" >LOGIN</h3>
+            </div>
+
+            <div class="mb-3">
+                <label style="font-size:x-large; font-family:Cooper; color:#1e90ff">User Name</label>
+                <InputText @bind-Value="Model.UserName" class="form-control" placeholder="Username" style="font-size:x-large; font-family:Cooper; color:#1e90ff" />
+                <ValidationMessage For="() => Model.UserName"/>
+            </div>
+            <div class="mb-3">
+                <label style="font-size:x-large; font-family:Cooper; color:#1e90ff">Password</label>
+                <InputText @bind-Value="Model.Password" class="form-control" placeholder="Password" style="font-size:x-large; font-family:Cooper; color:#1e90ff" />
+                <ValidationMessage For="() => Model.Password"/>
+            </div>
+            <div class="mb-3 text-center">
+                <span class="text-danger">@errorMessage</span>
+            </div>
+            <div class="mb-3 d-grip gap-2">
+                <table>
+                    <tr>
+                        <button type="submit" class="btn btn-primary">Login</button>
+                        <label style="font-size:x-large; font-family:Cooper">     </label>
+@*                         <button style="justify-content:flex-end" class="btn btn-primary" @onclick="AddNewClient">Sign up..</button> *@
+@*                         <a class="nav-link btn btn-primary" href="AddNewClient">
+                            <button type="button" class="nav-link btn btn-primary">Sign up..</button>
+                            @*                     <span class="oi oi-pencil" aria-hidden="true" style="color:greenyellow; font-size:larger; font-weight:bold"> SIGN UP.. </span>               
+                        </a> *@
+                    </tr>
+                </table>
+                
+
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    public HttpContext? httpContext { get; set; }
+    [CascadingParameter]
+    public Clients? selectedClient { get; set; }
+    [SupplyParameterFromForm]
+    public LoginViewModel Model { get; set; } = new();
+    private string? errorMessage;
+
+    private async Task Authenticate()
+    {
+        selectedClient = await clientService.Login(Model.UserName, Model.Password);
+        if (selectedClient is null) //  || userAccount.password.ToString() != Model.Password)
+        {
+            errorMessage = "Invalid user name or password";
+            return;
+        }
+
+        List<Claim> claims = [];
+        claims.Add(new Claim(ClaimTypes.Name, selectedClient.UserName));
+        claims.Add(new Claim(ClaimTypes.Surname, selectedClient.LastName));
+        claims.Add(new Claim(ClaimTypes.GivenName, selectedClient.FirstName));
+        claims.Add(new Claim(ClaimTypes.Sid, selectedClient.ID.ToString()));
+
+        if (selectedClient.Enabled == 100)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, "administrator"));
+        }
+        if (selectedClient.Enabled == 25)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, "client"));
+        }
+        if (selectedClient.Enabled == 15)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, "user"));
+        }
+
+        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        var principal = new ClaimsPrincipal(identity);
+        await httpContext.SignInAsync(principal);
+        navMan.NavigateTo("/");
+    }
+}

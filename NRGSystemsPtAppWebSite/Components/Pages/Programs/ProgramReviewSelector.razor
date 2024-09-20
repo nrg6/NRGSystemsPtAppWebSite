@@ -1,0 +1,25 @@
+﻿@rendermode InteractiveServer
+
+<MudGrid>
+    <MudItem xs="12" md="1">
+        <MudRadioGroup @bind-Value="ReviewElement" Style="color:#1e90ff" >
+            <MudRadio Color="Color.Primary" Value="@(ReviewElement)" onclick="clickker" onchange="ChangeElement">Workload</MudRadio>
+            <MudRadio Color="Color.Primary" Value="@(ReviewElement)" onchange="ChangeElement">Reps</MudRadio>
+            <MudRadio Color="Color.Primary" Value="@(ReviewElement)" onchange="ChangeElement">Weights</MudRadio>
+            <MudRadio Color="Color.Primary" Value="@(ReviewElement)" onchange="ChangeElement">Time</MudRadio>
+        </MudRadioGroup>
+    </MudItem>
+</MudGrid>
+@code {
+    // public Placement Placement { get; set; } = Placement.Right;
+    [Parameter]
+    public string ReviewElement { get; set; }
+    [Parameter]
+    public EventCallback NewElement { get; set; }
+
+    async Task ChangeElement()
+    {
+        await NewElement.InvokeAsync();
+    }
+}
+

@@ -1,0 +1,455 @@
+﻿@page "/trainRepSet/{title}"
+@using NRGSystemsPtAppWebSite.Models
+@using NRGSystemsPtAppWebSite.Services
+
+@inject FunctionRestService apiClient
+
+@code {
+
+    [Parameter]
+    public string title { get; set; }
+
+    [Parameter]
+    public static List<ClientsProgram> aListOfPrograms { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        aListOfPrograms = await Task.Run(() => apiClient.GetProgramListByTitle(title));
+        // process the data into individual programs
+        FormatExerciseList();
+    }
+
+
+
+    void FormatExerciseList()
+    {
+        // // create a variable to compare the length is equal to reps
+        // int weightSplitLength = 0;
+        // RepSplitLength = 0;
+
+        // // clear the old list
+        // SelectedExerciseList = [];
+        // SelectedExerciseList.Clear();
+
+        // // if no weight has been selected then chose '0'
+        // if (CurrentProgram.Weights is null) CurrentProgram.Weights = "0";
+        // // if no reps has been set then chose '0'
+        // if (CurrentProgram.Repetitions is null) CurrentProgram.Repetitions = "0";
+        // // check if the values are comma seperated indicating more than one set
+
+    }
+//         if (!IsCircuitProgram) Not a circuits program
+//         {
+//             configure the button that will be used to start this class.
+//             ViewProgramExerciseCommand = new RelayCommand(ViewSelectedExercise);
+//             GoBackCommand = new AsyncRelayCommand(GoBackClickAsync);
+//             BackColumnWidth = new GridLength(1, GridUnitType.Auto);
+//             ForwardColumnWidth = new GridLength(1, GridUnitType.Star);
+
+//             _reps = StringSplitter.SplitAnyStringToList(CurrentProgram.Repetitions);
+//             RepSplitLength = _reps.Count;
+
+//             run a check on the weights entry
+//             if (CurrentProgram.Weights.Contains(','))
+//             {
+//                 _weights = StringSplitter.SplitAnyStringToList(CurrentProgram.Weights);
+//                 weightSplitLength = _weights.Count; Length;
+//             }
+//             use the 2 values collected to check that the reps and sets match
+//             if ((weightSplitLength == RepSplitLength) && (weightSplitLength > 0)) { FillSetsForExercise(); }
+//         }
+//         else it is a circuits program
+//         {
+//             set button text
+//             TrainingTextString = "NEXT";
+//             BackTextString = "BACK";
+
+//             try to sdjuct the columns from auto to 50/50 on the ButtonGrid in xaml
+//             BackColumnWidth = new GridLength(1, GridUnitType.Star);
+//             change the function of the back button, to go to previous exercise not the exercise list
+//             GoBackCommand = new RelayCommand(GoToPreviousExercise);
+//             change the function of the ViewProgramExerciseCommand to itterate through the exercise list
+//             ViewProgramExerciseCommand = new RelayCommand(GoToNextExercise);
+
+//             copy the program into a working set.
+//             foreach (var ex in CurrentClientsPrograms)
+//             {
+//                 selectedExerciseList.Add(ex);
+
+//                 ProgramReports rep = new();
+//                 rep.NameOfExercise = ex.NameOfExercise;
+//                 rep.ProgramId = ex.ProgramId;
+//                 rep.ClientId = ex.ClientId;
+//                 rep.ClientName = ex.ClientName;
+//                 rep.ProgramTitle = ex.ProgramTitle;
+//                 rep.DateIssued = ex.DateIssued;
+//                 rep.Reported = 0;
+//                 rep.TimeOfSession = DateTime.Now.ToString();
+//                 rep.ProgramId = ex.ProgramId;
+
+//                 reportList.Add(rep);
+//             }
+
+//             SelectedExerciseListCount = selectedExerciseList.Count;
+//             UpdateCircuitUI();
+//             UpdateReportBar();
+//         }
+//     }
+
+//     private void GoToNextExercise()
+//     {
+//         if (selectedExerciseList.Count > 0)
+//         {
+//             if (RepsAchieved != "")
+//             {
+//                 UpdateCircuitsProgram();
+//             }
+
+//             ProgramStateIndex++;
+//             UpdateCircuitUI();
+//         }
+//         else
+//         {
+//             RestartCircuits();
+//         }
+//     }
+
+//     private void GoToPreviousExercise()
+//     {
+//         if (selectedExerciseList.Count > 0)
+//         {
+//             if (RepsAchieved != "")
+//             {
+//                 UpdateCircuitsProgram();
+//             }
+
+//             ProgramStateIndex--;
+//             UpdateCircuitUI();
+//         }
+//         else
+//         {
+//             if (CompletedCircuit)
+//                 _ = SendReportsAsync();
+//         }
+//     }
+
+//     private void UpdateCircuitUI()
+//     {
+//         if (selectedExerciseList.Count > 0)
+//         {
+//             if (ProgramStateIndex > selectedExerciseList.Count - 1)
+//                 ProgramStateIndex = 0;
+//             if (ProgramStateIndex < 0)
+//                 ProgramStateIndex = selectedExerciseList.Count - 1;
+
+//             CurrentProgram = selectedExerciseList[ProgramStateIndex];
+//             WeightsUsed = CurrentProgram.Weights;
+//             RepsAchieved = string.Empty;
+//             Giffy = CurrentProgram.ImageGifLocation;
+//         }
+//     }
+
+//     private void UpdateCircuitsProgram()
+//     {
+//         foreach (var rep in reportList)
+//         {
+//             if (rep.NameOfExercise == CurrentProgram.NameOfExercise)
+//             {
+//                 if (CurrentProgram.ClientsComments is null)
+//                     CurrentProgram.ClientsComments = " ";
+
+//                 rep.ClientsComments = CurrentProgram.ClientsComments;
+
+//                 if (rep.Weights is null)
+//                 {
+//                     rep.Weights += $"{WeightsUsed}";
+//                     rep.RepsCompleted += $"{RepsAchieved}";
+//                 }
+//                 else
+//                 {
+//                     rep.Weights += $", {WeightsUsed}";
+//                     rep.RepsCompleted += $", {RepsAchieved}";
+//                 }
+
+//                 rep.RestingTime = DateTime.Now.ToString();
+//                 rep.TrainingTime = DateTime.Now.ToString();
+
+//                 selectedExerciseList.Remove(CurrentProgram);
+//             }
+//         }
+
+//         SelectedExerciseListCount = selectedExerciseList.Count;
+
+//         if (selectedExerciseList.Count == 0)
+//         {
+//             EndOrNewProgram();
+//         }
+
+//         if (selectedExerciseList.Count > 0)
+//             CurrentProgram = selectedExerciseList[0];
+
+//         UpdateReportBar();
+//     }
+
+//     private void UpdateReportBar()
+//     {
+//         Report bar to indicate the current set
+//         RepSplitLength = CurrentClientsPrograms.Count;
+//         RepCounter = selectedExerciseList.Count;
+//         ReportBarReport = (1.0 / RepSplitLength) * RepCounter;
+//     }
+
+//     private void EndOrNewProgram()
+//     {
+//         set the button text to either "QUIT" or "AGAIN"
+//         TrainingTextString = "AGAIN";
+//         BackTextString = "QUIT";
+//     }
+
+//     private void RestartCircuits()
+//     {
+//         selectedExerciseList = CurrentClientsPrograms;
+
+//         SelectedExerciseListCount = selectedExerciseList.Count;
+
+//         RepsAchieved = "";
+//         set button text
+//         TrainingTextString = "NEXT";
+//         BackTextString = "BACK";
+//     }
+
+//     private async Task SendReportsAsync()
+//     {
+//         var frs = new FunctionRestService();
+//         if (CompletedCircuit)
+//         {
+//             foreach (var report in reportList)
+//             {
+//                 report.ClientsComments = CurrentProgram.ClientsComments;
+//                 var z = await frs.UploadProgramReport(report);
+//                 if (z != "No problem?")
+//                 {
+//                     Console.WriteLine(report);
+//                 }
+//             }
+//         }
+//         await Shell.Current.GoToAsync(nameof(ReportListPage));
+//         return;
+//     }
+
+//     void FillSetsForExercise()
+//     {for each value, create a new program to work through
+//         for (int i = 0; i < _weights.Count; i++)
+//         {
+//             ClientsProgram prog = new()
+//                 {
+//                     Weights = _weights[i],
+//                     ClientId = CurrentProgram.ClientId,
+//                     ClientName = CurrentProgram.ClientName,
+//                     ProgramTitle = CurrentProgram.ProgramTitle,
+//                     DateIssued = CurrentProgram.DateIssued,
+//                     NumberOfVisits = CurrentProgram.NumberOfVisits,
+//                     TimesProgramUsed = CurrentProgram.TimesProgramUsed,
+//                     NameOfExercise = CurrentProgram.NameOfExercise,
+//                     ImageGifLocation = CurrentProgram.ImageGifLocation,
+//                     Repetitions = _reps[i],
+//                     PtComments = CurrentProgram.PtComments,
+//                     RepsCompleted = CurrentProgram.RepsCompleted,
+//                     TrainingTime = CurrentProgram.TrainingTime,
+//                     RestingTime = CurrentProgram.RestingTime,
+//                     ClientsComments = CurrentProgram.ClientsComments,
+//                     ProgramId = CurrentProgram.ProgramId
+//                 };
+//             selectedExerciseList.Add(prog);
+//         }
+//         Set the first values as the initial working program set
+//         CurrentProgram = selectedExerciseList[0];
+
+//         SelectedExerciseListCount = selectedExerciseList.Count;
+
+//         all data is collected and uploaded through the string "ProgramReport"
+//         _report ??= new();
+//         _report.ClientName = CurrentProgram.ClientName;
+//         _report.ClientId = CurrentProgram.ClientId;
+//         _report.TimeOfSession = $"{DateTime.Now.Date} - {DateTime.Now.TimeOfDay}";
+//         _report.ProgramTitle = CurrentProgram.ProgramTitle;
+//         _report.TrainingTime = $"{DateTime.Now}";
+//         _report.DateIssued = CurrentProgram.DateIssued;
+//         _report.ProgramId = CurrentProgram.ProgramId;
+//     }
+//     private void ViewSelectedExercise()
+//     {
+//         ProgramState = 0,"Press to Start Training", 1,"Press when Completed", 2,"Select the next exercise", 3,"Upload" };
+
+//         this is showing the screen with PT comments, Only shown before exercise
+//         if (ProgramStateIndex == 0) "Press to Start Training"
+//         {
+//             StartTraining();
+//             Your work is done here...
+//             return;
+//         }
+//         "Press when Completed" selected while there are some programs left to work through
+//         if (ProgramStateIndex == 1)
+//         {
+//             PressWhenCompleted();
+//             return;
+//         }
+//         "Select the next exercise" as long as there are some programs left to work through
+//         if (ProgramStateIndex == 2)
+//         {
+//             _ = SelectTheNextExerciseAsync();
+//         }
+//         this is to upload the completed program to the database
+//         if (ProgramStateIndex == 3) "Upload"
+//         {
+//             _ = UploadReportAsync();
+//             return;
+//         }
+//     }
+
+//     private void StartTraining()
+//     {
+//         increment ProgramStateIndex to select  "Press when Completed" next itteration
+//         ProgramStateIndex++;
+
+//         increment RepCounter so it
+//         RepCounter++;
+
+//         set the button text
+//         TrainingTextString = ProgramState[ProgramStateIndex];
+
+//         clear the List<string> for reuse
+//         _weights.Clear();
+//         _reps.Clear();
+//     }
+
+//     private void PressWhenCompleted()
+//     {
+//         If the client hasn't entered any values, don't proceed
+//         if (WeightsUsed == "" && RepsAchieved == "")
+//             return;
+
+//         Update "ProgramReport" with the latest reps and set
+//         _report.NameOfExercise = CurrentProgram.NameOfExercise;
+
+//         _ = WeightsUsed.Replace(" ", string.Empty);
+//         _weights.Add($"{CurrentProgram.Weights}-{WeightsUsed}");
+
+//         _ = RepsAchieved.Replace(" ", string.Empty);
+//         _reps.Add($"{CurrentProgram.Repetitions}-{RepsAchieved}");
+
+//         clean out the List of the completed program
+//         if (selectedExerciseList.Count > 0)
+//             selectedExerciseList.RemoveAt(0);
+
+//         SelectedExerciseListCount = selectedExerciseList.Count;
+
+//         while there are still programs in selectedExerciseList
+//         if (selectedExerciseList.Count > 0)
+//         {
+//             update the current program with the now first program
+//             CurrentProgram = selectedExerciseList[0];
+
+//             RepCounter is used to display the current rep
+//             if (RepCounter < RepSplitLength)
+//                 RepCounter++;
+
+//             Report bar to indicate the current set
+//             var fReportBarReport = (1.0 / RepSplitLength);
+//             ReportBarReport += fReportBarReport;
+//             clear the values for the next set.
+//             WeightsUsed = "";
+//             RepsAchieved = "";
+//             return;
+//         }
+//         else
+//         {    increment ProgramStateIndex to select  "Press when Completed" next itteration
+//             ProgramStateIndex++;
+//             update the button text.
+//             TrainingTextString = ProgramState[ProgramStateIndex];
+//             return;
+//         }
+//     }
+//     private async Task SelectTheNextExerciseAsync()
+//     {
+//         All the sets are done and and the client has the option of leaving a comment on the exercise
+//         if (CurrentProgram.ClientsComments is null)
+//             _report.ClientsComments += "NO COMMENTS FROM CLIENT. \r\n";
+//         _report.ClientsComments = $"{CurrentProgram.ClientsComments} \r\n";
+
+//         string weightString = "";
+//         foreach (var weight in _weights)
+//         {
+//             _ = weight.Replace(" ", string.Empty);
+//             weightString += $"{weight} ";
+//         }
+//         string repString = "";
+//         foreach (var rep in _reps)
+//         {
+//             _ = rep.Replace(" ", string.Empty);
+//             repString += $"{rep} ";
+//         }
+
+//         _report.RepsCompleted = repString;
+//         _report.Weights = weightString;
+
+//         CurrentClientsPrograms.Remove(CurrentProgram);
+//         foreach (var prog in CurrentClientsPrograms)
+//         {
+//             if (prog.NameOfExercise == CurrentProgram.NameOfExercise)
+//             {
+//                 CurrentClientsPrograms.Remove(prog);
+//             }
+//         }
+
+//         if (CurrentClientsPrograms.Count > 0)
+//         {
+//             clear all the data
+//             RepCounter = 0;
+//             ReportBarReport = 0;
+
+//             _report.RestingTime = $"{DateTime.Now}";
+//             add the latest report to the ReportList in BaseViewModel
+//             ReportList.Add(_report);
+
+//             return to the list of exercises to do and select the next option.
+//             await Shell.Current.GoToAsync("/ProgramExerciseListPage");
+//             all done....
+//             return;
+//         }
+//         else            if there are no more sets or exercises then increment ProgramStateIndex to 3
+//         {
+//             ProgramStateIndex++;
+//             update the button text.
+//             TrainingTextString = ProgramState[ProgramStateIndex];
+//             return;
+//         }
+//     }
+//     private async Task UploadReportAsync()
+//     {
+//         ReportList.Add(_report);
+//         foreach (ProgramReports program in ReportList)
+//         {
+//             if (CurrentClient.Enabled > 0)
+//             {
+//                 try
+//                 {
+//                     FunctionRestService _restService = new();
+//                     var v = await _restService.UploadProgramReport(program);
+//                 }
+//                 catch (Exception ex)
+//                 {
+//                     Console.WriteLine(ex.ToString());
+//                 }
+//             }
+
+//             DataBaseService sqliteService = new();
+//             await sqliteService.UploadClientsReportsToSqlite(program);
+//         }
+
+//         await Shell.Current.GoToAsync(nameof(PtInfoPage));
+//         return;
+//     }
+
+// }
+}

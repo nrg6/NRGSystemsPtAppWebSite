@@ -1,0 +1,333 @@
+﻿@page "/EditExercise/{Id}"
+
+@using Microsoft.Extensions.Configuration
+@using NRGSystemsPtAppWebSite;
+@using NRGSystemsPtAppWebSite.Models;
+@using NRGSystemsPtAppWebSite.Services
+@* @inject FunctionRestService apiClient *@
+@inject ExerciseRestFunction apiClient
+@inject NavigationManager NavigaitonManager
+@inject IConfiguration config
+
+<h3>Edit Exercise</h3>
+
+<div>
+    <InputFile OnChange="@LoadFiles" class="form-control" multiple accept=".gif, .mp4, .jpeg" />
+
+    <img src="@ImagePath" id="ViewImage" /> @* alt= @bind="file.Name" /> *@
+    @* <label for="Name" class="control-label" @bind="@obj.ImageGif" ></label> *@
+
+        <br />
+
+        <div class="for-group">
+            <label for="Name">Exercise Name</label>
+            <InputText id="Name" class="form-control" @bind-Value="obj.ExerciseName"/>
+@*             <input form="ExerciseName" 
+                placeholder="the name of the exercise" 
+                class="form-control" 
+                @bind="@obj.ExerciseName" />
+ *@        </div>
+        <br />
+        <div class="for-group">
+            <label for="InstructionPreperation" 
+                   class="control-label">Preperation</label>
+            <input form="InstructionPreperation" 
+                   placeholder="text to instruct how to begin the exercise" 
+                   class="form-control" @bind="@obj.InstructionPreperation" />
+        </div>
+        <br />
+        <div class="for-group">
+            <label for="InstructionExecution" 
+                   class="control-label">Execution</label>
+            <input form="InstructionExecution" 
+                   placeholder="text how to perform the exercise" 
+                   class="form-control" @bind="@obj.InstructionExecution" />
+        </div>
+        <br />
+        <div class="for-group">
+            <label for="Comments" 
+                   class="control-label">Comments</label>
+            <input form="Comments" 
+                   placeholder="any additional comments a trainer wishes to make about equipment or form." 
+                   class="form-control" @bind="@obj.Comments" />
+        </div>
+        <br />
+        <div>
+            <label> Mechanics </label>
+            <select name="searchMechs" @bind="@obj.ClassificationMechanics">
+                <option selected disabled> -- compound(building) or isolation(shaping) -- </option>
+                <option value="compound"> BUILDING </option>
+                <option value="isolation"> SHAPING </option>
+                <option value="fitness"> FITNESS </option>
+            </select>
+        </div>
+        <br />
+        <div>
+            <label> Force </label>
+            <select name="searchForce" @bind="@obj.ClassificationForce" >
+                <option selected disabled> -- push pull or legs -- </option>
+                <option value="Push"> PUSH </option>
+                <option value="Pull"> PULL </option>
+                <option value="Legs"> LEGS </option>
+            </select>
+        </div>
+        <br />
+        <div>
+            <label> Muscle Group </label>
+            <select name="searchForce" @bind="@obj.MuscleGroup" >
+                <option selected disabled> -- muscle group -- </option>
+                <option value="Chest"> CHEST </option>
+                <option value="Back"> BACK </option>
+                <option value="Quads"> QUADS </option>
+                <option value="Hamstring"> HAMSTRING </option>
+                <option value="Lowerleg"> LOWER LEG </option>
+                <option value="Shoulder"> SHOULDER </option>
+                <option value="Arms"> ARMS </option>
+                <option value="Core"> CORE </option>
+            </select>
+        </div>
+        <br />
+        <div>
+            <label> Target Muscle </label>
+        <select name="searchMuscle" @bind="@obj.MuscleTarget">
+                <option selected disabled> -- primary muscle worked -- </option>
+            @foreach(var muscle in Muscles.MuscleList)
+                {
+                    <option > @muscle.Name  </option>
+                }
+        </select>
+        </div>
+        <br />
+        <table class="table">
+            <tr>
+                <th> Synergist </th>
+                <th> Stabilizers </th>
+            </tr>
+            <tr>
+                <td>
+                    @foreach (var synergist in SynergistsList)
+                    {
+                        <li>
+                            <input type="checkbox" @bind="synergist.IsChecked" />
+                            <input @bind="synergist.Name" /> 
+                        </li>
+                    }
+                </td>
+                <td>
+                    @foreach (var muscle in AllMuscles)
+                    {
+                        <li>
+                            <input type="checkbox" @bind="muscle.IsChecked" />
+                            <input @bind="muscle.Name" />
+                        </li>
+                    }
+                </td>
+            </tr>
+        </table>
+        <br /> 
+
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <input type="button" class="btn btn-primary" @onclick="@UpdateExercise" value="Update Exercise" />
+                <input type="button" class="btn btn-danger" @onclick="@Cancel" value="Cancel" />
+            </div>
+        </div>
+    </div>
+    </div>
+
+
+@code {
+    [Parameter]
+    public string ImagePath { get; set; } = string.Empty;
+    [Parameter]
+    public string Id { get; set; }
+    Exercise obj = new Exercise();
+    public List<Synergist> SynergistsList = new();
+    private List<string> errors = new();
+    private string _muscleSynergists = string.Empty;
+    private string _muscleStabilizers = string.Empty;
+    private List<Muscle> AllMuscles = new();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var synergists = Synergists.GetSynergists();
+        SynergistsList.AddRange(synergists);
+        AllMuscles = Muscles.GetMuscles();
+        obj = await Task.Run(() => apiClient.GetAnExercise(Convert.ToInt32(Id)));
+
+        var synSplit = obj.MuscleSynergists.Split(",");
+        foreach(var syn in synSplit)
+        {
+            foreach (var synergist in synergists)
+            {
+                if (synergist.Name == syn)
+                {
+                    synergist.IsChecked = true;
+                }
+            }
+        }
+
+        var stabSplit = obj.MuscleStabilizers.Split(",");
+        foreach (var syn in stabSplit)
+        {
+            foreach (var stabilizer in AllMuscles)
+            {
+                if (stabilizer.Name == syn)
+                {
+                    stabilizer.IsChecked = true;
+                }
+            }
+        }
+    }
+
+    protected async void UpdateExercise()
+    {
+        CheckChanged();
+        await apiClient.EditAnExercises(obj);
+        NavigaitonManager.NavigateTo("exercises/all");
+    }
+
+    protected void CheckChanged()
+    {
+        foreach (var syn in SynergistsList)
+        {
+            if (syn.IsChecked)
+            {
+                _muscleSynergists += syn.Name + ", ";
+            }
+        }
+        foreach (var mus in AllMuscles)
+        {
+            if (mus.IsChecked)
+            {
+                _muscleStabilizers += mus.Name + ", ";
+            }
+        }
+        obj.MuscleSynergists = _muscleSynergists;
+        obj.MuscleStabilizers = _muscleStabilizers;
+    }
+    protected void Cancel()
+    {
+        NavigaitonManager.NavigateTo("exercises");
+    }
+
+    private async Task LoadFiles(InputFileChangeEventArgs e)
+    {
+        errors.Clear();
+        ImagePath = $"~/Images/UploadedVideos/RealSteel/{e.File.Name}";
+
+        if (e.FileCount > 1)
+        {
+            errors.Add($"Error: Attempting to upload {e.FileCount} files, but only  {1} files allowed");
+            return;
+        }
+
+        foreach (var file in e.GetMultipleFiles(1))
+        {
+            try
+            {
+                string newFileName = Path.ChangeExtension(
+                Path.GetRandomFileName(),
+                Path.GetExtension(file.Name));
+
+                obj.ImageGif = Path.Combine(
+                config.GetValue<string>("FileStorage")!,
+                "RealSteel",
+                newFileName);
+
+                // ImagePath = $"/Images/UploadedVideos/RealSteel/{file.Name}";
+
+                Directory.CreateDirectory(Path.Combine(
+                config.GetValue<string>("FileStorage")!,
+                "RealSteel"));
+
+                await using FileStream fs = new(obj.ImageGif, FileMode.Create);
+                await file.OpenReadStream(1).CopyToAsync(fs);
+
+                // originalPath = file.Name;
+                // ImagePath = $"~/Images/UploadedVideos/RealSteel/{newFileName}";
+            }
+            catch (Exception ex)
+            {
+                errors.Add($"File: {file.Name} Error: {ex.Message}");
+            }
+        }
+    }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    @*
+    <hr />
+    <form>
+    <div class="row">
+    <div class="col-md-8">
+    <div class="for-group">
+    <label for="Id" class="control-label"> Id</label>
+    <input form="Id" class="form-control" @bind="@obj.ExerciseId" />
+    </div>
+    <div class="for-group">
+    <label for="Name" class="control-label">Exercise Name</label>
+    <input form="ExerciseName" class="form-control" @bind="@obj.ExerciseName" />
+    </div>
+    <div class="for-group">
+    <label for="ImageGif" class="control-label">Image</label>
+    <input form="ImageGif" class="form-control" @bind="@obj.ImageGif" />
+    </div>
+    <div class="for-group">
+    <label for="InstructionPreperation" class="control-label">Preperation</label>
+    <input form="InstructionPreperation" class="form-control" @bind="@obj.InstructionPreperation" />
+    </div>
+    <div class="for-group">
+    <label for="InstructionExecution" class="control-label">Execution</label>
+    <input form="InstructionExecution" class="form-control" @bind="@obj.InstructionExecution" />
+    </div>
+    <div class="for-group">
+    <label for="Comments" class="control-label">Comments</label>
+    <input form="Comments" class="form-control" @bind="@obj.Comments" />
+    </div>
+    <div class="for-group">
+    <label for="ClassificationUtility" class="control-label">Utility</label>
+    <input form="ClassificationUtility" class="form-control" @bind="@obj.ClassificationUtility" />
+    </div>
+    <div class="for-group">
+    <label for="ClassificationMechanics" class="control-label">Mechanics</label>
+    <input form="ClassificationMechanics" class="form-control" @bind="@obj.ClassificationMechanics" />
+    </div>
+    <div class="for-group">
+    <label for="ClassificationForce" class="control-label">Force</label>
+    <input form="ClassificationForce" class="form-control" @bind="@obj.ClassificationForce" />
+    </div>
+    <div class="for-group">
+    <label for="MuscleTarget" class="control-label">Target Muscle</label>
+    <input form="MuscleTarget" class="form-control" @bind="@obj.MuscleTarget" />
+    </div>
+    <div class="for-group">
+    <label for="MuscleSynergists" class="control-label">Synergists</label>
+    <input form="MuscleSynergists" class="form-control" @bind="@obj.MuscleSynergists" />
+    </div>
+    <div class="for-group">
+    <label for="MuscleStabilizers" class="control-label">Stabilizers</label>
+    <input form="MuscleStabilizers" class="form-control" @bind="@obj.MuscleStabilizers" />
+    </div>
+    </div>
+    </div> *@
+

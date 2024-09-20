@@ -1,0 +1,82 @@
+﻿@page "/ViewMuscle/{Id}"
+
+@using NRGSystemsPtAppWebSite.Services
+@using NRGSystemsPtAppWebSite;
+@using NRGSystemsPtAppWebSite.Models;
+@inject FunctionRestService apiClient
+@inject NavigationManager NavigaitonManager
+
+<h1 style="font-family:Cooper; color:#1e90ff">@MuscleViewer.StringName</h1>
+
+<img src="@chosenImage" alt="gif image" />
+<br />
+<table class="table" style="color:#1e90ff; font-family:Cooper">
+
+    <tr>
+        <th>Location </th>
+        <td> @MuscleViewer.Location </td>
+    </tr>
+    <br />
+    <tr>
+        <th>Insertion </th>
+        <td> @MuscleViewer.Insertion </td>
+    </tr>
+    <br />
+    <tr>
+        <th>Origin </th>
+        <td> @MuscleViewer.Origin </td>
+    </tr>
+    <tr>
+        <th>
+            <a class="nav-link btn btn-info" href="exercises/@MuscleViewer.StringName"> VIEW  </a>
+        </th>
+        <td>
+            <a class="nav-link btn btn-info" href="muscles"> CANCEL </a>
+        </td>
+@*         <input type="button" class="btn btn-primary" @onclick="@ViewExercises" value="View Exercises" />
+        <input type="button" class="btn btn-secondary" @onclick="@Cancel" value="Cancel" /> *@
+    </tr>
+
+</table>
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+    public Muscle MuscleViewer { get; set; } = new Muscle();
+
+    string chosenImage ; 
+
+    protected override async Task OnInitializedAsync()
+    {
+        int i = 0;
+        foreach (var muscle in Muscles.GetMuscles())
+        {
+            muscle.MuscleId = i;
+
+            if (muscle.StringName == Id)
+            {
+                MuscleViewer = muscle;
+                chosenImage = $"{MuscleViewer.Image}";
+            }
+            i++;
+        }
+
+
+        if (MuscleViewer is null)
+        {
+            chosenImage = "Images/nrglogo.jpg";
+        }
+    }
+
+    protected void ViewExercises()
+    {
+        NavigaitonManager.NavigateTo($"ViewExercise/{MuscleViewer.StringName}");
+    }
+
+    protected void Cancel()
+    {
+        NavigaitonManager.NavigateTo("muscles");
+    }
+
+}
+

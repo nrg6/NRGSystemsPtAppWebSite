@@ -1,0 +1,291 @@
+﻿@page "/CreateProgramFromTemplate/{title}"
+
+<h3>Create Program From Template</h3>
+
+@using CurrieTechnologies.Razor.SweetAlert2
+@using NRGSystemsPtAppWebSite;
+@using NRGSystemsPtAppWebSite.Models;
+@using NRGSystemsPtAppWebSite.Services
+@inject ClientRestFunctionServices apiClientClient
+@inject ExerciseRestFunction apiExerciseClient
+@inject FunctionRestService apiClient 
+@inject NavigationManager NavigaitonManager
+@inject SweetAlertService swal
+
+<hr />
+<form>
+    <div class="row">
+        <div class="col-md-8">
+            <div class="for-group">
+                <label for="ClientsNameLabel" class="control-label">Clients Name</label>
+                <select asp-for="ClientsNameLabel" @bind="@selectedClient">
+                    <option> -- Select a client -- </option>
+                    @foreach(var item in allClients)
+                    {
+                        <option value="@item">
+                            @item
+                        </option>
+                    }
+                </select>
+            </div>
+            <div class="for-group">
+                <label for="ProgramName" class="control-label">Name Of Program</label>
+                <input form="ProgramName" class="form-control" @bind="@NameOfTheProgram" />
+            </div>
+            <div class="for-group">
+                <label for="ExerciseName" class="control-label">Exercise Name</label>
+                <input form="ExerciseName" class="form-control" @bind="@selectedExercise" />
+                <select name="ExerciseName" @bind="selectedExercise">
+                    @foreach (var item in allExercises)
+                    {
+                        <option value="@item">
+                            @item
+                        </option>
+                    }
+                </select>
+            </div>
+            <div class="for-group">
+                <label for="Weights" class="control-label">Weights</label>
+                <input form="Weights" class="form-control" @bind="@program.Weights" />
+            </div>
+            <div class="for-group">
+                <label for="Reps" class="control-label">Reps</label>
+                <input form="Reps" class="form-control" @bind="@program.Repetitions" />
+            </div>
+            <div class="for-group">
+                <label for="PtsComments" class="control-label">PTs Comments</label>
+                <input form="PtsComments" class="form-control" @bind="@program.PtComments" />
+            </div>
+        </div>
+    </div>
+    <br/>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <label value="       " />
+                <input type="button" class="btn btn-secondary" @onclick="@CreateNewProgram" value="Save To DataBase" />
+                <label value="       "/>
+                <input type="button" class="btn btn-primary" @onclick="@AddNewExercise" value="Add Another Exercise" />
+                <label value="       " />
+                <input type="button" class="btn btn-secondary" @onclick="()=> AddSelectedExercise(program)" value="Confirm" />
+                <label value="       " />
+            </div>
+        </div>
+    </div>
+</form>
+<table class="table">
+    <thead>
+        <tr>
+            <th> Program ID </th>
+            <th> Exercise </th>
+            <th> Weights </th>
+            <th> Reps </th>
+            <th> Edit </th>
+            <th> Confirm </th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var program in templateProgramExerciseList)
+        {
+            <tr>
+                <td> @program.ProgramId </td>
+                <td> @program.NameOfExercise  </td>
+                <td> @program.Weights </td>
+                <td> @program.Repetitions </td>
+
+                <input type="button" class="btn btn-primary" @onclick="()=> SelectedExercise(program)" value="Edit" />
+                @* <input type="button" class="btn btn-secondary" @onclick="()=> AddSelectedExercise(program)" value="Confirm" /> *@
+        
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    [Parameter]
+    public string title { get; set; }
+    [Parameter]
+    public List<string> allClients { get; set; } = new();
+    [Parameter]
+    public List<string> allExercises { get; set; } = new();
+    [Parameter]
+    public string selectedClient { get; set; } = string.Empty;
+    [Parameter]
+    public string selectedExercise { get; set; } = string.Empty;
+    [Parameter]
+    public string NameOfTheProgram { get; set; } = string.Empty;
+
+    Clients client = new(); 
+    List<Clients> clientList = new();
+    List<Exercise> exerciseList = new();
+    ClientsProgram program = new();
+    List<ClientsProgram> templateProgramExerciseList = new();
+    List<ClientsProgram> newProgramExerciseList = new();
+
+    int programIndex;
+    int programVersion;
+    string giffy;
+
+    protected override async Task OnInitializedAsync()
+    {
+        templateProgramExerciseList = await Task.Run(() => apiClient.GetProgramListByTitle(title));
+        exerciseList = await Task.Run(() => apiExerciseClient.GetAllExercises());
+        clientList = await Task.Run(() => apiClientClient.GetAllClients());
+
+        foreach (var ex in exerciseList)
+        {
+            allExercises.Add(ex.ExerciseName);
+        }
+
+        foreach (var cli in clientList)
+        {
+            var mixString = $"{cli.ID} =-= {cli.FullName}";
+            allClients.Add(mixString);
+        }
+        foreach (var exe in exerciseList)
+        {
+            var mixString = $"{exe.ExerciseName} =+= {exe.ImageGif}";
+            allExercises.Add(mixString);
+        }
+
+        TestTitle(title);
+
+        NameOfTheProgram = $"{title} - {selectedClient} - 1 ";
+
+        programIndex = 1;
+        program = templateProgramExerciseList[programIndex - 1];
+
+        selectedExercise = program.NameOfExercise;
+    }
+
+    protected async Task GoToNextExercise()
+    {
+        var result = await AddExerciseToNewProgramList();
+        if (!result)
+            return;
+
+        programIndex++;
+        program = templateProgramExerciseList[programIndex - 1];
+        selectedExercise = program.NameOfExercise;
+        giffy = program.ImageGifLocation;
+        NameOfTheProgram = $"{title} - {selectedClient} - 1 ";
+
+    }
+
+    protected async Task AddSelectedExercise(ClientsProgram exercise)
+    {
+        // add to newProgramExerciseList
+        bool diddit = await AddExerciseToNewProgramList();
+
+        // if (diddit) // remove from templateProgramExerciseList
+        // {
+        //     templateProgramExerciseList.Remove(exercise);
+        // }
+    }
+
+    protected async Task SelectedExercise(ClientsProgram exercise)
+    {
+        // open up for edit
+        foreach(var pro in templateProgramExerciseList)
+        {
+            if (pro.NameOfExercise == exercise.NameOfExercise)
+            {
+                program = pro;              
+                selectedExercise = pro.NameOfExercise;
+                giffy = program.ImageGifLocation;
+            }
+        }
+
+        templateProgramExerciseList.Remove(exercise);
+        //        program = (ClientsProgram)templateProgramExerciseList.Where(x => x.ProgramTitle == exercise.ProgramTitle);
+
+        NameOfTheProgram = $"{title} - {selectedClient} - 1 ";
+    }
+    protected async Task<bool> AddExerciseToNewProgramList()
+    {
+        if(selectedClient == "")
+        {
+            var result = await swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Confirmation",
+                    Text = "You aint filled in the client you twat!!",
+                    Icon = SweetAlertIcon.Warning,
+                    ConfirmButtonText = "Oh yeah..I am a FUCKWIT!!"
+                });
+            var confirm = !string.IsNullOrEmpty(result.Value);
+            if (confirm)
+                return false;
+        }
+
+        var selectedClientSplitter = selectedClient.Split("=-=");
+        var selectedExerciseSplitter = selectedExercise.Split("=+=");
+        NameOfTheProgram = $"{title} - {selectedClient} - 1 ";
+
+        if (program.PtComments is null)
+            program.PtComments = " ";
+
+        ClientsProgram newProgram = new()
+        {
+                ClientId = int.Parse(selectedClientSplitter[0]),
+                ClientName = selectedClientSplitter[1],
+                ProgramTitle = NameOfTheProgram,
+                DateIssued = DateTime.Now.Date.ToString(),
+                NumberOfVisits = 0,
+                TimesProgramUsed = programVersion,
+                NameOfExercise = selectedExercise,
+                ImageGifLocation = giffy,
+                Weights = program.Weights,
+                Repetitions = program.Repetitions,
+                PtComments = program.PtComments
+        };
+
+
+        newProgramExerciseList.Add(newProgram);
+        return true;
+    }
+
+    protected async Task CreateNewProgram()
+    {
+        await apiClient.AddNewProgramList(newProgramExerciseList);
+    }
+
+
+    protected void AddNewExercise()
+    {
+        program = new();
+
+        NameOfTheProgram = $"{title} - {selectedClient} - 1 ";
+        program.ProgramTitle = NameOfTheProgram;
+        var selectedClientSplitter = selectedClient.Split("=-=");
+        program.ClientId = int.Parse(selectedClientSplitter[0]);
+        if (selectedClientSplitter.Length > 0)
+            program.ClientName = selectedClientSplitter[1];
+        else
+            program.ClientName = "Bob Sagert";
+
+        var selectedExerciseSplitter = selectedExercise.Split("=+=");
+        program.NameOfExercise = selectedExerciseSplitter[0];
+        if (selectedExerciseSplitter.Length > 0)
+            program.ImageGifLocation = selectedExerciseSplitter[1];
+        else
+            program.ImageGifLocation = "No Vid.";
+
+        program.DateIssued = (DateTime.Now.Date).ToString();
+        if (program.PtComments is null)
+            program.PtComments = " ";
+
+
+        templateProgramExerciseList.Add(program);
+    }
+
+    void TestTitle(string title)
+    {
+        var titSplit = title.Split("-");
+
+        title = titSplit[0];
+
+        if (titSplit.Length > 1)
+            programVersion = int.Parse(titSplit[1]);
+    }
+}

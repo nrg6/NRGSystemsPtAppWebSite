@@ -1,0 +1,102 @@
+﻿@page "/ProgramView/{title}"
+
+@using NRGSystemsPtAppWebSite;
+@using NRGSystemsPtAppWebSite.Models;
+@using NRGSystemsPtAppWebSite.Services
+@inject FunctionRestService apiClient
+@inject NavigationManager NavigaitonManager
+
+@rendermode InteractiveServer
+
+<AuthorizeView Roles="administrator">
+    <Authorized>
+    <table class="table">
+        <tr>
+            <button style="color: #1e90ff; font-family:Cooper" @onclick="EditThisProgram">Edit Program</button>
+                <button style="color: #1e90ff; font-family:Cooper" @onclick="Cancel">Cancel</button>
+            <button style="color: #1e90ff; font-family:Cooper" @onclick="StartTraining">Start Training</button>
+        </tr>
+    </table>
+    </Authorized>
+</AuthorizeView>
+
+<AuthorizeView Roles="client">
+    <Authorized>
+    <table class="table">
+        <tr>
+            <button style="color: #1e90ff; font-family:Cooper" class="alert-light" @onclick="Cancel">Cancel</button>
+            <MudBlazor.MudInputLabel>          </MudBlazor.MudInputLabel>
+            <button style="color: #1e90ff; font-family:Cooper" class="alert-danger" @onclick="StartTraining">Start Training</button>
+        </tr>
+    </table>
+    </Authorized>
+</AuthorizeView>
+
+
+<th class="form-label" style="color: #1e90ff; font-family:Cooper">@title</th>
+
+@if (AllProgramExercises is null)
+{
+    <p><em>Loading ..........</em></p>
+}
+else
+{
+
+    <table class="table" style="color: #1e90ff; font-family:Cooper">
+        <thead>
+            <tr>
+                <th> Exercise </th>
+                <th> Weights </th>
+                <th> Reps </th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var program in AllProgramExercises)
+            {
+                <tr>
+                    <td> @program.NameOfExercise  </td>
+                    <td> @program.Weights </td>
+                    <td> @program.Repetitions </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+@code {
+    [Parameter]
+    public string title { get; set; }
+    [Parameter]
+    public static List<ClientsProgram> AllProgramExercises { get; set; } = new();
+    [Parameter]
+    public int i { get; set; } = 0;
+
+    List<string> tempTitleList = new List<string>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        i = 0;
+        AllProgramExercises = [];
+        var aListOfPrograms = await Task.Run(() => apiClient.GetProgramListByTitle(title));
+        foreach (var program in aListOfPrograms) //  ProgramList.ListOfPrograms)
+        {
+            if (program.ProgramTitle == title)
+            {
+                AllProgramExercises.Add(program);
+            }
+        }
+    }
+
+    void EditThisProgram()
+    {
+        NavigaitonManager.NavigateTo($"CreateProgramFromTemplate/{title}");
+    }
+    void Cancel()
+    {
+        NavigaitonManager.NavigateTo($"ProgramList");
+    }
+    private void StartTraining(MouseEventArgs e)
+    {
+        NavigaitonManager.NavigateTo($"trainClient/{title}");
+    }
+}

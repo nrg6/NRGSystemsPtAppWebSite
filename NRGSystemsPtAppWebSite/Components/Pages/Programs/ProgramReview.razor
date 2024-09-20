@@ -1,0 +1,115 @@
+﻿@page "/programReview/{programTitle}/{clientsID}"
+
+@using NRGSystemsPtAppWebSite.Models
+@using NRGSystemsPtAppWebSite.Services
+
+@inject FunctionRestService apiClient
+@inject NavigationManager NavigaitonManager
+
+@rendermode InteractiveServer 
+
+@if(ProgramList != null)
+{
+    <table class="table" style="color:#1e90ff" border="0">
+        <thead>
+            <tr id="ReportHeaders" style="align-content:center">
+                <th style="color:#64FF64; font-size:x-large"> @programTitle </th>
+            </tr>
+        </thead>
+        <tbody>
+            @* <tr> *@
+                @foreach (var exercise in ProgramList)
+                {
+                    <tr>
+                        <td style="color:#1e90ff">
+                            @exercise.NameOfExercise
+                        </td>
+                    </tr>
+                }
+            @* </tr> *@
+@*             <tr>
+                <td>
+                    <ReviewView ProgramList="ProgramList" />
+                </td>
+            </tr>
+ *@        </tbody>
+    </table>
+}
+
+ @if(ProgramList != null)
+{
+    <table width="2500px" style="align-content:start">
+        <tr>
+            <td>
+                <ReviewView ProgramList="ProgramList" />
+            </td>
+        </tr>
+    </table>
+} 
+
+@code
+{
+    // [CascadingParameter]
+    // public HttpContext? httpContext { get; set; }
+    [Parameter]
+    public List<ClientsProgram> ProgramList { get; set; }
+
+    [Parameter]
+    public EventCallback<ClientsProgram> NewReview { get; set; }
+
+    [Parameter]
+    public EventCallback<ClientsProgram> NewSubmission { get; set; }
+    [Parameter]
+    public string programTitle { get; set; }
+    [Parameter]
+    public string clientsID { get; set; }
+
+    // List<string> tempTitleList = new List<string>();
+    // public static List<ClientsProgram> ListOfPrograms = new List<ClientsProgram>();
+    // public static List<ClientsProgram> ListOfSelectedPrograms = new List<ClientsProgram>();
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        // ********************************************
+        // TRYING TO GET THE CLIENTS ID FOR PROGRAM RETRIEVAL......
+        // ********************************************
+        // foreach (var claim in httpContext.User.Claims)
+        // {
+        //     if (claim.Type.Contains("sid"))
+        //     {
+        //         clientsID = int.Parse(claim.Value);
+        //     }
+        // }
+
+        var aListOfPrograms = await apiClient.GetProgramListAsync(int.Parse(clientsID));
+        ProgramList = [];
+
+        foreach (var program in aListOfPrograms)
+        {
+            if (program.ProgramTitle == programTitle)
+            {
+                // tempTitleList.Add(program.ProgramTitle);
+                ProgramList.Add(program);
+            }
+        }
+        // ListOfPrograms = new();
+        // ListOfSelectedPrograms = new();
+        // var aListOfPrograms = await apiClient.GetProgramListAsync(clientsID);
+
+        // foreach (var program in aListOfPrograms)
+        // {
+        //     if ((!tempTitleList.Contains(program.ProgramTitle))) //&& (program.ClientId == 0))
+        //     {
+        //         tempTitleList.Add(program.ProgramTitle);
+        //         ListOfSelectedPrograms.Add(program);
+        //     }
+        // }
+    }
+
+    protected async Task ReviewSelectedExercise(ClientsProgram exercise)
+    {
+        await NewReview.InvokeAsync(exercise);
+    }
+}

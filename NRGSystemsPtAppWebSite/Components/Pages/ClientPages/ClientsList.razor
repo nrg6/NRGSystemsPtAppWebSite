@@ -1,0 +1,74 @@
+﻿@page "/clients"
+
+@using NRGSystemsPtAppWebSite.Services
+@using NRGSystemsPtAppWebSite.Models
+@inject ClientRestFunctionServices clientService
+@* 
+<NavLink class="nav-link" style="font-size:xx-large" href="AddNewClient">
+    <span style="color:red; font-family:Cooper" class="oi oi-plus" aria-hidden="true"> Add New Client </span>
+</NavLink>
+
+
+<h1 style="font-family:Cooper; font-weight:bold">Clients</h1>
+ *@
+@if(cliObject is null)
+{
+    <p><em>Loading ..........</em></p>
+}
+else
+{
+    <table style ="font-size:xx-large; font-family:Cooper; font-weight:bold">
+        <thead>
+            <tr>
+                <th>Clients</th>
+            </tr>
+        </thead>
+    </table>
+
+    <table class="table" style="color:aliceblue; font-family:Cooper">
+        <thead>
+            <tr>
+                <th style="align-content:center"> ID </th>
+                <th style="align-content:center"> NAME </th>
+                <th style="align-content:center"> EMAIL </th>
+                <th style="align-content:center"> D.O.B. </th>
+                <th style="align-content:center"> PHONE </th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach(var client in cliObject)
+            {
+                <tr>
+                    <td> @client.ID </td>
+                    <td> @client.FullName </td>
+                    <td> @client.Email </td>
+                    <td> @client.DoB </td>
+                    <td> @client.Phone </td>
+                    <td>
+                        <a class="nav-link btn btn-primary" href="EditClient/@client.ID">
+                            <span style="color:darkorange" class="oi oi-pencil" aria-hidden="true"> Edit </span>
+                        </a>
+                    </td>
+@*                     <td>
+                        <a class="nav-link btn btn-danger" href="DeleteClient/@client.ID">
+                            <span class="oi oi-trash" aria-hidden="true"> Delete </span>
+                        </a>
+                    </td> *@
+                </tr>
+            }
+        </tbody>
+    </table>
+    
+    <NavLink href="AddNewClient" style="font-size:xx-large; color:red"> Add New Client</NavLink>
+}
+
+@code {
+    List<Clients> cliObject;
+
+    protected override async Task OnInitializedAsync()
+    {
+        cliObject = await Task.Run(() => clientService.GetAllClients());
+    }
+
+}

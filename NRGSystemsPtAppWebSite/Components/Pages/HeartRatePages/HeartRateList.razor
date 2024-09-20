@@ -1,0 +1,74 @@
+﻿@page "/HeartRateList"
+
+@using NRGSystemsPtAppWebSite.Models
+@using NRGSystemsPtAppWebSite.Services
+
+@inject FunctionRestService clientService
+
+<h3>Heart Rate List</h3>
+
+
+@if (HeartRateTitleList is null)
+{
+    <p><em>Loading ..........</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th class="align-content-center"> Title  </th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var hr in HeartRateTitleList)
+            {
+                <tr>
+                    <td>
+                        <a class="nav-link btn btn-info" href="GetHeartRateData/@hr">
+                            <span class="oi oi-info" aria-hidden="true"> View </span>
+                        </a>
+                    </td>
+                    <td>
+                        <input type="button" class="btn btn-danger" @onclick="@CreateExcelDoc" value="Download Excel File" />
+                    </td>
+                    <td> @hr </td>
+@*                     <td>
+                        <a class="nav-link btn btn-primary" href="EditExercise/@exercise.ExerciseId">
+                            <span class="oi oi-pencil" aria-hidden="true"> Edit </span>
+                        </a>
+                    </td>
+                    <td>
+                        <a class="nav-link btn btn-danger" href="DeleteExercise/@exercise.ExerciseId">
+                            <span class="oi oi-trash" aria-hidden="true"> Delete </span>
+                        </a>
+                    </td> *@
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+
+@code {
+    [Parameter]
+    public static List<HeartRateStorage> AzureHeartRateList { get; set; } = [];
+    [Parameter] 
+    public static List<string> HeartRateTitleList { get; set; } = [];
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        int clientId = 1;
+        if (AzureHeartRateList.Count == 0)
+            AzureHeartRateList = await Task.Run(() => clientService.GetHeartRateListAsync(clientId));
+
+        if (HeartRateTitleList.Count == 0)
+            HeartRateTitleList = AzureHeartRateList.Distinct(new HeartRateTimeStampEqualityComparer()).Select(p => p.HeartRateTimeStamp).ToList();
+    }
+    protected async void CreateExcelDoc()
+    {
+        
+    }
+}

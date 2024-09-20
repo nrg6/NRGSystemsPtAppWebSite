@@ -1,0 +1,51 @@
+﻿@using NRGSystemsPtAppWebSite.Models
+
+@rendermode InteractiveServer
+
+<table>
+    <thead>
+        <tr>
+            <th>
+                <ProgramReviewSelector ReviewElement=ReviewElement
+                                        NewElement="ElementSelected"/>
+            </th>
+            <th>
+                <MudChart ChartType="ChartType.Line" ChartSeries="@Series" XAxisLabels="@XAxisLabels" Width="100%" Height="350px" Style="color:aliceblue"/>
+            </th>
+        </tr>
+    </thead>
+</table>
+
+@code {
+    [Parameter]
+    public List<ClientsProgram> ProgramList { get; set; }
+    [Parameter]
+    public string ReviewElement { get; set; } = "Reps";
+
+    public List<ChartSeries> Series = new List<ChartSeries>()
+    {
+        new ChartSeries() { Name = "Floor Bench Press", Data = new double[] { 40, 20, 25, 27, 46, 60, 48, 80, 15 } },
+        new ChartSeries() { Name = "Bent Over Rows", Data = new double[] { 19, 24, 35, 13, 28, 15, 13, 16, 31 } },
+        new ChartSeries() { Name = "Curtsy Lunge", Data = new double[] { 8, 6, 11, 13, 4, 16, 10, 16, 18 } },
+        new ChartSeries() { Name = "Kettlebell Deadlift", Data = new double[] { 18, 16, 21, 23, 14, 26, 20, 26, 8 } },
+        new ChartSeries() { Name = "Single Arm Arnold Press Kettlebell", Data = new double[] { 45, 77, 33, 84, 43, 16, 13, 76, 68 } },
+        new ChartSeries() { Name = "Curl To Press", Data = new double[] { 9, 23, 34, 45, 56, 57, 67, 78, 89 } },
+        new ChartSeries() { Name = "Pullover Crunch", Data = new double[] { 2, 3, 4, 5, 7, 4, 10, 6, 8 } },
+    };
+    public string[] XAxisLabels = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep" };
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        foreach (var prog in ProgramList)
+        {
+            // Series.Add(new ChartSeries() { Name = prog.NameOfExercise });
+        }
+    }
+    void ElementSelected()
+    {
+        
+    }
+}
+
+

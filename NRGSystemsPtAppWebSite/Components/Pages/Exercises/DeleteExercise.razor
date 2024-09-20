@@ -1,0 +1,97 @@
+﻿@page "/DeleteExercise/{Id}"
+
+@using NRGSystemsPtAppWebSite;
+@using NRGSystemsPtAppWebSite.Models;
+@using NRGSystemsPtAppWebSite.Services
+@inject ExerciseRestFunction apiClient
+@* @inject FunctionRestService apiClient *@
+@inject NavigationManager NavigaitonManager
+
+<h3>Delete Exercise</h3>
+
+<hr />
+<form>
+    <div class="row">
+        <div class="col-md-8">
+            <div class="for-group">
+                <label for="Id" class="control-label"> Id</label>
+                <input form="Id" class="form-control" @bind="@obj.ExerciseId" />
+            </div>
+            <div class="for-group">
+                <label for="Name" class="control-label">Exercise Name</label>
+                <input form="ExerciseName" class="form-control" @bind="@obj.ExerciseName" />
+            </div>
+            <div class="for-group">
+                <label for="ImageGif" class="control-label">Image</label>
+                <input form="ImageGif" class="form-control" @bind="@obj.ImageGif" />
+            </div>
+            <div class="for-group">
+                <label for="InstructionPreperation" class="control-label">Preperation</label>
+                <input form="InstructionPreperation" class="form-control" @bind="@obj.InstructionPreperation" />
+            </div>
+            <div class="for-group">
+                <label for="InstructionExecution" class="control-label">Execution</label>
+                <input form="InstructionExecution" class="form-control" @bind="@obj.InstructionExecution" />
+            </div>
+            <div class="for-group">
+                <label for="Comments" class="control-label">Comments</label>
+                <input form="Comments" class="form-control" @bind="@obj.Comments" />
+            </div>
+            <div class="for-group">
+                <label for="ClassificationROM" class="control-label">ROM</label>
+                <input form="ClassificationROM" class="form-control" @bind="@obj.ClassificationROM" />
+            </div>
+            <div class="for-group">
+                <label for="ClassificationMechanics" class="control-label">Mechanics</label>
+                <input form="ClassificationMechanics" class="form-control" @bind="@obj.ClassificationMechanics" />
+            </div>
+            <div class="for-group">
+                <label for="ClassificationForce" class="control-label">Force</label>
+                <input form="ClassificationForce" class="form-control" @bind="@obj.ClassificationForce" />
+            </div>
+            <div class="for-group">
+                <label for="MuscleTarget" class="control-label">Target Muscle</label>
+                <input form="MuscleTarget" class="form-control" @bind="@obj.MuscleTarget" />
+            </div>
+            <div class="for-group">
+                <label for="MuscleSynergists" class="control-label">Synergists</label>
+                <input form="MuscleSynergists" class="form-control" @bind="@obj.MuscleSynergists" />
+            </div>
+            <div class="for-group">
+                <label for="MuscleStabilizers" class="control-label">Stabilizers</label>
+                <input form="MuscleStabilizers" class="form-control" @bind="@obj.MuscleStabilizers" />
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <input type="button" class="btn btn-primary" @onclick="@DeleteExerciseById" value="Delete Exercise" />
+                <input type="button" class="btn btn-danger" @onclick="@Cancel" value="Cancel" />
+            </div>
+        </div>
+    </div>
+</form>
+
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+    Exercise obj = new Exercise();
+
+    protected override async Task OnInitializedAsync()
+    {
+        obj = await Task.Run(() => apiClient.GetAnExercise(Convert.ToInt32(Id)));
+    }
+
+    protected async void DeleteExerciseById()
+    {
+        await apiClient.DeleteAnExercise(obj.ExerciseId);
+        NavigaitonManager.NavigateTo("exercises");
+    }
+
+    protected void Cancel()
+    {
+        NavigaitonManager.NavigateTo("exercises");
+    }
+}

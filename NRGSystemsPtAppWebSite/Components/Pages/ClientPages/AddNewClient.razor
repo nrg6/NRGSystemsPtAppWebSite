@@ -1,0 +1,89 @@
+﻿@page "/AddNewClient"
+@* @rendermode InteractiveServer *@
+
+@* @attribute [RenderModeInteractiveAuto]  *@
+@* @rendermode RenderMode.InteractiveAuto *@
+
+@* @using Microsoft.AspNetCore.Mvc.Rendering *@
+@using NRGSystemsPtAppWebSite.Models
+@using NRGSystemsPtAppWebSite.Services
+
+@inject ClientRestFunctionServices apiClient
+@inject NavigationManager NavigaitonManager
+
+<h3>Add New Client</h3>
+
+<form>
+    <div class="row">
+        <div class="col-md-8">
+            <div class="for-group">
+                <label for="Name" class="control-label">First Name</label>
+                <input form="FirstName" class="form-control" @bind="@obj.FirstName" />
+            </div>
+            <div class="for-group">
+                <label for="LastName" class="control-label">Last Name</label>
+                <input form="LastName" class="form-control" @bind="@obj.LastName" />
+            </div>
+            <div class="for-group">
+                <label for="UserName" class="control-label">User Name</label>
+                <input form="UserName" class="form-control" @bind="@obj.UserName" />
+            </div>
+            <div class="for-group">
+                <label for="Password" class="control-label">Password</label>
+                <input form="Password" class="form-control" @bind="@obj.Password" />
+            </div>
+            <div class="for-group">
+                <label for="Email" class="control-label">Email</label>
+                <input form="Email" class="form-control" @bind="@obj.Email" />
+            </div>
+            <div class="for-group">
+                <label for="Phone" class="control-label">Phone</label>
+                <input form="Phone" class="form-control" @bind="@obj.Phone" />
+            </div>
+            <div class="for-group">
+                <label for="DoB" class="control-label">D.o.B.</label>
+                <input form="DoB" class="form-control" @bind="@obj.DoB" />
+            </div>
+            <div class="for-group">
+                <label for="Sex" class="control-label">Sex</label>
+                <input form="Sex" class="form-control" @bind="@obj.Sex" />
+            </div>
+            <div class="for-group">
+                <label for="Height" class="control-label">Height</label>
+                <input form="Height" class="form-control" @bind="@obj.Height" />
+            </div>
+            <div class="for-group">
+                <label for="Weight" class="control-label">Weight</label>
+                <input form="Weight" class="form-control" @bind="@obj.Weight" />
+            </div>
+        </div>
+    </div>
+     <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <button class="btn btn-primary" @onclick="CreateNewClient">Save Client</button>
+@*                 <button @onclick="@(e => CreateNewClient())">Save Client</button> 
+                <button @onclick="(e => Cancel())">Cancel</button> 
+                 <input type="button" class="btn btn-primary" @onclick="@CreateNewClient" value="Save Client" /> *@
+                <input type="button" class="btn btn-danger" @onclick="@Cancel" value="Cancel" /> 
+              </div>
+        </div>
+    </div> 
+</form> 
+
+@code {
+    Clients obj = new Clients();
+
+
+    private async void CreateNewClient() //InputFileChangeEventArgs e)
+    {
+        obj.Enabled = 1;
+        await apiClient.CreateAClient(obj);
+        NavigaitonManager.NavigateTo("/clients");
+    }
+
+    protected void Cancel()
+    {
+        NavigaitonManager.NavigateTo("/clients");
+    }
+}

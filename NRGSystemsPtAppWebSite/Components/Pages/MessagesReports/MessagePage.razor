@@ -1,0 +1,150 @@
+﻿@page "/messages"
+
+@using NRGSystemsPtAppWebSite.Models
+@using NRGSystemsPtAppWebSite.Services
+
+@inject FunctionRestService apiClient
+
+<h3>MessagePage</h3>
+
+<hr />
+<form>
+    <div class="row">
+        <div class="col-md-8">
+            <div class="for-group">
+                <label for="UnreadMessages" class="control-label">Unread Messages = </label>
+                <input form="MessageId" class="form-control" @bind="@noOfUnreadMessages" />
+            </div>
+            <div class="for-group">
+                <label for="ReadMessages" class="control-label">Read Messages</label>
+                <input form="ReadMessages" class="form-control" @bind="@noOfReadMessages" />
+            </div>
+            <br />
+            <div class="for-group">
+                <label for="MessageId" class="control-label">Message Id</label>
+                <input form="MessageId" class="form-control" @bind="@currentMessage.MessageId" />
+            </div>
+            <div class="for-group">
+                <label for="MessageTime" class="control-label">Message Time</label>
+                <input form="MessageTime" class="form-control" @bind="@currentMessage.TimeMessageSent" />
+            </div>
+            
+            <div class="for-group">
+                <label for="Text" class="control-label">Message</label>
+                <input form="Text" class="form-control" @bind="@currentMessage.Text" />
+            </div>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <input type="button" class="btn btn-primary" @onclick="@MessageHasBeenRead" value="@messageRead" />
+                    </div>
+                </div>
+            </div>
+            <div class="for-group">
+                <label for="MessageRead" class="control-label">Message Read</label>
+                <input form="MessageRead" class="form-control" @bind="@currentMessage.MessageRead" />
+            </div>
+            
+            <div class="for-group">
+                <label for="ClientsId" class="control-label">Client</label>
+                <input form="ClientsId" class="form-control" @bind="@currentMessage.ClientsId" />
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <input type="button" class="btn btn-primary" @onclick="@NextMessage" value="Next Message" />
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <input type="button" class="btn btn-primary" @onclick="@PreviousMessage" value="Previous Message" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+
+
+
+@code {
+    List<MessageModel> ptMessages = [];
+    MessageModel currentMessage = new();
+    int messageIndex = 0;
+    string messageRead = "";
+    int noOfUnreadMessages;
+    int noOfReadMessages;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ptMessages = await apiClient.GetAllMessages();
+
+        foreach(var pt in ptMessages)
+        {
+            if (pt.MessageRead > 0)
+                noOfReadMessages++;
+        }
+
+        noOfUnreadMessages = ptMessages.Count - noOfReadMessages;
+
+        messageIndex = 0;
+        if (ptMessages.Count > 0)
+        {
+            currentMessage = ptMessages[messageIndex];
+        }
+        setButtonText();
+    }
+
+    protected async Task NextMessage()
+    {
+        messageIndex++;
+        if (messageIndex > ptMessages.Count)
+        {
+            messageIndex = 0;
+        }
+        else
+        {
+            if (ptMessages.Count > 0)
+            {
+                await apiClient.EditAMessage(ptMessages[messageIndex - 1]);
+                currentMessage = ptMessages[messageIndex];
+            }
+        }
+        setButtonText();
+    }
+    protected void PreviousMessage()
+    {
+        messageIndex--;
+        if (messageIndex < 0)
+            messageIndex = 0;
+
+        if (ptMessages.Count > 0)
+        {
+            currentMessage = ptMessages[messageIndex];
+        }
+        setButtonText();
+    }
+    protected void MessageHasBeenRead()
+    {
+        if (ptMessages.Count > 0)
+        {
+            ptMessages[messageIndex].MessageRead++;
+        }
+        setButtonText();
+    }
+    void setButtonText()
+    {
+        messageRead = "NO";
+        if (ptMessages.Count > 0)
+        {
+            if (ptMessages[messageIndex].MessageRead > 0)
+            {
+                messageRead = "YES";
+            }
+        }
+    }
+    }

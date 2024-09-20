@@ -1,0 +1,91 @@
+﻿@page "/ViewExercise/{id}"
+
+@using NRGSystemsPtAppWebSite.Services
+@using NRGSystemsPtAppWebSite;
+@using NRGSystemsPtAppWebSite.Models;
+@inject ExerciseRestFunction apiClient
+@inject NavigationManager NavigaitonManager
+
+<h1 style="color:#1e90ff">@obj.ExerciseName</h1>
+
+@if (obj is null)
+{
+    <p><em>Loading ..........</em></p>
+}
+else
+{
+    <img src="@ImagePath" width="600" />
+
+    <table class="table" style="color:#1e90ff">
+        <thead>
+            <tr>
+                <th> Prep</th>
+                <td> @obj.InstructionPreperation </td>
+            </tr>
+            <tr>
+                <th> Execution </th>
+                <td> @obj.InstructionExecution </td>
+            </tr>
+            <tr>
+                <th> Comments </th>
+                <td> @obj.Comments </td>
+            </tr>
+            <tr>
+                <th> Mechanics </th>
+                <td> @obj.ClassificationMechanics </td>
+            </tr>
+            <tr>
+                <th> ROM </th>
+                <td> @obj.ClassificationROM</td>
+            </tr>
+            <tr>
+                <th> Force </th>
+                <td> @obj.ClassificationForce </td>
+            </tr>
+            <tr>
+                <th> Target </th>
+                <td> @obj.MuscleTarget </td>
+                <td>
+                    <a class="nav-link btn btn-primary" href="ViewMuscle/@obj.MuscleTarget">
+                        <span class="oi oi-info" aria-hidden="true">View Muscle</span>
+                    </a>
+                </td>
+
+            </tr>
+            <tr>
+                <th> Synergists </th>
+                <td> @obj.MuscleSynergists </td>
+            </tr>
+            <tr>
+                <th> Stabilizers </th>
+                <td> @obj.MuscleStabilizers </td>
+            </tr>
+        </thead>
+
+    </table>
+}
+
+@code {
+
+    [Parameter]
+    public string Id { get; set; }
+    [Parameter]
+    public string ImagePath { get; set; }
+    Exercise obj = new Exercise();
+
+    protected override async Task OnInitializedAsync()
+    {
+        obj = await Task.Run(() => apiClient.GetAnExercise(Convert.ToInt32(Id)));
+
+           // check obj.image path, make sure it is valid for the image display!!!!!!
+        // var bitter = obj.ImageGif.Split("\\");
+        // var bit = $"/{bitter[bitter.Length - 3]}/{bitter[bitter.Length - 2]}/{bitter[bitter.Length - 1]}";
+        // ImagePath = bit; 
+        ImagePath = obj.ImageGif; // .Split("\\");
+    }
+
+    protected void Cancel()
+    {
+        NavigaitonManager.NavigateTo("exercises");
+    }
+}

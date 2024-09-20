@@ -1,0 +1,220 @@
+﻿@page "/GetHeartRateData/{TimeStamp}"
+
+@using NRGSystemsPtAppWebSite.Services
+@using NRGSystemsPtAppWebSite.Models
+@inject FunctionRestService clientService
+@using BlazorBootstrap
+@* 
+<NavLink class="nav-link" href="ShowChart/{HeartRateValueList}">
+    <span class="oi oi-plus" aria-hidden="true"> Add New Client </span>
+</NavLink> *@
+
+<h3>Heart Rate Data</h3>
+@* <style>
+    body {
+        background-color: aquamarine;
+    }
+</style> *@
+
+<LineChart @ref="lineChart" >
+    <canvas id="bar" width="490" height="225"></canvas>
+</LineChart>
+
+@code {
+    [Parameter]
+    public string TimeStamp { get; set; } = null!;
+    [Parameter]
+    public string ImageSource { get; set; } = null!;
+    [Parameter]
+    public int HeartRateValue { get; set; }
+    [Parameter]
+    public string SensorContactPoint { get; set; } = null!;
+    [Parameter]
+    public int HeartRateVariability { get; set; }
+    [Parameter]
+    public int EnergyExpendeture { get; set; }
+    [Parameter]
+    public int HeartRateMax { get; set; } = 0;
+    [Parameter]
+    public List<HeartRateStorage> AzureHeartRateList { get; set; } = [];
+    [Parameter]
+    public List<double> HeartRateList { get; set; } = [];
+    [Parameter]
+    public List<double> HeartRateVariabilityList { get; set; } = [];
+
+    List<int> rollingVariabilityList = [];
+
+    private LineChart lineChart;
+    // HeartRate heartRateModel;
+
+    protected override async Task OnInitializedAsync()
+    {
+        int clientsId = 1;
+        AzureHeartRateList = await Task.Run(() => clientService.GetHeartRateListAsync(clientsId));
+        if (AzureHeartRateList is null) return;
+
+        HeartRateList ??= [];
+        HeartRateVariabilityList ??= [];
+
+        double newHeartRateValue = 0;
+
+        const byte heartRateValueBit = 0x01;
+        const byte sensorContactBit = 0x02;
+        const byte energyExpenditureBit = 0x03;
+        const byte hrVariabilityBit = 0x04;
+
+        bool isHeartRateValueSizeLong = false;
+        bool isEnergyExpendedAvailable = false;
+        bool isHeartRateVariabilityAvailable = false;
+        bool isSensorContactAvailable = false;
+
+        // foreach (var ent in HeartRateList)
+        foreach (var ent in AzureHeartRateList)
+        {
+            var stringBytes = ent.StorageData.Split(",");
+            List<byte> byteList = [];
+            foreach (var by in stringBytes)
+            {
+                byte bb;
+                bool testy = byte.TryParse(by, out bb);
+                if (testy)
+                    byteList.Add(bb);
+            }
+
+            var bytes = byteList.ToArray();
+
+            byte flags = bytes[0];
+            isHeartRateValueSizeLong = (flags & heartRateValueBit) != 0;
+            isSensorContactAvailable = (flags & sensorContactBit) != 0;
+            isEnergyExpendedAvailable = (flags & energyExpenditureBit) != 0;
+            isHeartRateVariabilityAvailable = (flags & hrVariabilityBit) != 0;
+
+            if ((bytes.Length == 2) || (bytes.Length == 4))
+            {
+                newHeartRateValue = isHeartRateValueSizeLong ? BitConverter.ToUInt16(bytes, 1) : bytes[1];
+                //if(newHeartRateValue != HeartRateValue)
+                // HeartRateList.Add(newHeartRateValue);
+            }
+
+            if ((bytes.Length == 4) || (bytes.Length == 6))
+            {
+                if (isSensorContactAvailable)
+                {
+                    try
+                    {
+                        var SensorContact = bytes[3];
+
+                        switch (SensorContact)
+                        {
+                            case 0: SensorContactPoint = "Other"; break;
+                            case 1: SensorContactPoint = "Finger"; break;
+                            case 2: SensorContactPoint = "Wrist"; break;
+                            case 3: SensorContactPoint = "Chest"; break;
+                            case 4: SensorContactPoint = "Hand"; break;
+                            case 5: SensorContactPoint = "Ear"; break;
+                            case 6: SensorContactPoint = "Foot"; break;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        SensorContactPoint = ex.Message;
+                    }
+                }
+
+                if (isHeartRateVariabilityAvailable)
+                {
+                    rollingVariabilityList ??= [];
+
+                    var expectedVariability = 60000f / HeartRateValue;
+                    var pulseTime = isHeartRateVariabilityAvailable ? BitConverter.ToUInt16(bytes, 2) : bytes[3];
+                    var newHeartRateVariability = (int)expectedVariability - pulseTime; // isHeartRateVariabilityAvailable ? BitConverter.ToUInt16(bytes, 2) : bytes[3];
+
+
+                    rollingVariabilityList.Add(newHeartRateVariability);
+                    while (rollingVariabilityList.Count > 10)
+                        rollingVariabilityList.RemoveAt(0);
+                    HeartRateVariability = (int)rollingVariabilityList.Average();
+                }
+                HeartRateVariabilityList.Add(HeartRateVariability);
+            }
+
+            if (bytes.Length == 6)
+            {
+                if (isEnergyExpendedAvailable)
+                {
+                    EnergyExpendeture = BitConverter.ToUInt16(bytes, 4); // : bytes[5];
+                }
+            }
+
+            if (HeartRateValue > HeartRateMax)
+                HeartRateMax = HeartRateValue;
+
+
+            if (newHeartRateValue != 0)
+                HeartRateList.Add(newHeartRateValue);
+
+        }
+
+        await RenderWormAsync();
+    }
+
+    private async Task RenderWormAsync()
+    {              
+        List<string>  preLabels = [];
+        for(int i = 0; i < HeartRateList.Count; i++) { preLabels.Add(AzureHeartRateList[i].Times); }
+
+        var data = new ChartData
+            {
+                Labels = preLabels,
+                Datasets = new List<IChartDataset>()
+                {
+                    new LineChartDataset()
+                    {
+                        // Label = "Heart Rate",
+                        // Data = HeartRateList, 
+                        // BackgroundColor = new List<string>{ "rgba(0,0,0,0)" }, //  "rgb(88, 80, 141)" },
+                        // BorderColor = new List<string>{ "rgb(88, 80, 141)" },
+                        // BorderWidth = new List<double>{2},
+                        // HoverBorderWidth = new List<double>{4},
+                        // PointBackgroundColor = new List<string>{ "rgb(88, 80, 141)" },
+                        // PointBorderColor = new List<string>{ "rgb(88, 80, 141)" },
+                        // PointRadius = new List<int>{0}, // hide points
+                        // PointHoverRadius = new List<int>{4}
+                    },
+                    // new LineChartDataset()
+                    // {
+                    //     Label = "Variability",
+                    //     Data = HeartRateVariabilityList, // new List<double>{ 1, 1, 8, 19, 24, 26, 39, 47, 56, 66, 75, 88, 95, 100, 109, 114, 124, 129, 140, 142 },
+                    //     BackgroundColor = new List<string>{ "rgb(255, 166, 0)" },
+                    //     BorderColor = new List<string>{ "rgb(255, 166, 0)" },
+                    //     BorderWidth = new List<double>{2},
+                    //     HoverBorderWidth = new List<double>{4},
+                    //     PointBackgroundColor = new List<string>{ "rgb(255, 166, 0)" },
+                    //     PointBorderColor = new List<string>{ "rgb(255, 166, 0)" },
+                    //     PointRadius = new List<int>{0}, // hide points
+                    //     PointHoverRadius = new List<int>{4},
+                    // }
+                }
+            };
+
+        var options = new LineChartOptions();
+
+        options.Interaction.Mode = InteractionMode.Index;
+
+        options.Plugins.Title.Text = "BPM";
+        options.Plugins.Title.Display = true;
+        options.Plugins.Title.Font.Size = 20;
+
+        options.Responsive = true;
+
+        options.Scales.X.Title.Text = "Time";
+        options.Scales.X.Title.Display = true;
+
+        options.Scales.Y.Title.Text = "Values";
+        options.Scales.Y.Title.Display = true;
+
+        await lineChart.InitializeAsync(data, options);
+    }
+}
+
+

@@ -1,0 +1,189 @@
+﻿@page "/viewClientsProgramList"
+
+<h3>View Clients Program List</h3>
+
+@using NRGSystemsPtAppWebSite;
+@using NRGSystemsPtAppWebSite.Models;
+@using NRGSystemsPtAppWebSite.Services
+@inject ClientRestFunctionServices apiClientClient
+@inject FunctionRestService apiClient
+@inject ExerciseRestFunction apiExerciseClient
+@inject NavigationManager NavigaitonManager
+@rendermode InteractiveServer
+
+<h5>Create Program, to create a template program, use template program as a client</h5>
+
+<hr />
+<form>
+    <div class="row">
+        <div class="col-md-8">
+            <div class="for-group">
+                <label for="ClientsNameLabel" class="control-label">Clients Name</label>
+                <select asp-for="ClientsNameLabel" @bind="@selectedClient">
+                    <option> -- Select a client -- </option>
+                    @foreach (var item in allClients)
+                    {
+                        <option value="@item">
+                            @item
+                        </option>
+                    }
+                </select>
+                <input type="button" class="io oi-flash" @onclick="@UpdateProgramList" value="Find Clients Programs" />
+            </div>
+
+            <br/>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>  </th>
+                        <th> Client ID </th>
+                        <th> Program Title </th>
+                        <th> Date Issued </th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var program in ListOfSelectedPrograms)
+                    {
+                        <tr>
+                            <td>
+                                <a class="nav-link btn btn-primary" href="ProgramView/@program.ProgramTitle">
+                                    <span class="oi oi-magnifying-glass" aria-hidden="true">Select Workout</span>
+                                </a>
+                            </td>
+                            <td> @program.ClientId </td>
+                            <td> @program.ProgramTitle </td>
+                            <td> @program.DateIssued </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+</div>
+</div>
+</form>
+
+
+@code {
+    [Parameter]
+    public List<string> allClients { get; set; } = new();
+    [Parameter]
+    public Clients client { get; set; } = new();
+    [Parameter]
+    public List<Clients> clientList { get; set; } = new();
+    [Parameter]
+    public List<Exercise> exerciseList { get; set; } = new();
+    [Parameter]
+    public ClientsProgram program { get; set; } = new();
+    [Parameter]
+    public List<ClientsProgram> programExerciseList { get; set; } = new();
+    [Parameter]
+    public static List<ClientsProgram> ListOfSelectedPrograms { get; set; } = [];
+    List<string> tempTitleList = new List<string>();
+
+    string selectedClient;
+
+    protected override async Task OnInitializedAsync()
+    {
+        clientList = await Task.Run(() => apiClientClient.GetAllClients());
+        exerciseList = await Task.Run(() => apiExerciseClient.GetAllExercises());
+
+        Clients dummy = GetDummy();
+        clientList.Add(dummy);
+
+        foreach (var cli in clientList)
+        {
+            var mixString = $"{cli.ID} =-= {cli.FullName}";
+            allClients.Add(mixString);
+        }
+
+        programExerciseList = new ();
+        programExerciseList = await apiClient.GetAllPrograms();
+
+        _= PopTheLists();
+    }
+
+    private async Task PopTheLists()
+    {
+        ListOfSelectedPrograms = new ();
+        tempTitleList = new ();
+
+        foreach (var program in programExerciseList)
+        {
+            if ((!tempTitleList.Contains(program.ProgramTitle))) //&& (program.ClientId == 0))
+            {
+                tempTitleList.Add(program.ProgramTitle);
+                ListOfSelectedPrograms.Add(program);
+            }
+        }
+    }
+
+
+    Clients GetDummy()
+    {
+        return new Clients()
+            {
+                ID = 0,
+                FirstName = "Template",
+                LastName = "Program",
+                UserName = "dum",
+                Password = "0",
+                Email = "",
+                Phone = "0",
+                DoB = DateTime.Now.Date,
+                Sex = "Male",
+                Height = 0,
+                Weight = 0,
+                Enabled = 0,
+                ProgramRevisionNo = "0",
+                ReportRevisionNo = "0",
+                MessageRevisionNo = "0"
+            };
+
+    }
+    async Task UpdateProgramList()
+    {
+        var s = selectedClient;
+        var a = selectedClient.Split("=");
+        int c = -1;
+        var b = int.TryParse(a[0], out c);
+        if (c != -1)
+            programExerciseList = await apiClient.GetProgramListAsync(c);
+
+        _ = PopTheLists();
+    }
+
+
+    // protected void AddNewExercise()
+    // {
+    //     program = new();
+
+    //     program.ProgramTitle = NameOfTheProgram;
+    //     var selectedClientSplitter = selectedClient.Split("=-=");
+    //     program.ClientId = int.Parse(selectedClientSplitter[0]);
+    //     program.ClientName = selectedClientSplitter[1];
+    //     var selectedExerciseSplitter = selectedExercise.Split("=+=");
+    //     program.NameOfExercise = selectedExerciseSplitter[0];
+    //     program.ImageGifLocation = selectedExerciseSplitter[1];
+    //     // program.ClientsComments = " ";
+    //     // program.RepsCompleted = "0";
+    //     // program.TrainingTime = "0";
+    //     // program.RestingTime = "0";
+    //     program.DateIssued = (DateTime.Now.Date).ToString();
+    //     if (program.PtComments is null)
+    //         program.PtComments = " ";
+
+
+    //     programExerciseList.Add(program);
+    // }
+
+    protected void Cancel()
+    {
+        NavigaitonManager.NavigateTo("/clients");
+    }
+
+    public void OnPost()
+    {
+
+    }
+}

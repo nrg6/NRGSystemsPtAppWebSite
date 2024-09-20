@@ -1,0 +1,42 @@
+﻿@page "/NewExerciseSelector/{allExercises}"
+
+@using NRGSystemsPtAppWebSite.Models
+
+<h3>NewExerciseSelector</h3>
+
+<div class="for-group">
+    <label for="ExerciseName" class="control-label">Exercise Name</label>
+    <select name="ExerciseName" @bind="selectedExercise">
+        <option> -- Select an exercise -- </option>
+        @foreach (var item in allExercises)
+        {
+            <option value="@item">
+                @item
+            </option>
+        }
+    </select>
+</div>
+
+@code {
+
+    [Parameter]
+    public List<Exercise> allExercises { get; set; } = new();
+
+    [Parameter]
+    public List<string> stringExercise { get; set; } = [];
+
+    [Parameter]
+    public string selectedExercise { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // stringExercise = [];
+        // foreach (var exe in allExercises)
+        // {
+        //     var mixString = $"{exe.ExerciseName} =+= {exe.ImageGif}";
+        //     stringExercise.Add(mixString);
+        // }
+    }
+}
+
+

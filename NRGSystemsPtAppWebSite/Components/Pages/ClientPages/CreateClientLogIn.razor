@@ -1,0 +1,38 @@
+﻿@page "/createLogin"
+
+@using NRGSystemsPtAppWebSite.Services
+@using NRGSystemsPtAppWebSite;
+@using NRGSystemsPtAppWebSite.Models;
+@inject FunctionRestService apiClient
+@inject NavigationManager NavigaitonManager
+
+<h3>Create New LogIn Details</h3>
+
+<div>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <input type="text" class="col-form-label" @bind="clientsName" />
+                <input type="password" class="visually-hidden-focusable" @bind="clientsid" />
+                <input type="button" class="btn btn-primary" @onclick="@LogIn" value="Create Log in..." />
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public static string clientsName { get; set; } = string.Empty;
+    public static int clientsid { get; set; } = 0;
+    // LogIn login = new();
+
+    public void LogIn()
+    {
+        // login.PassText = clientsName;
+        // login.PassCode = clientsid;
+
+        // loginService.SaveItems(login);
+
+        NavigaitonManager.NavigateTo("login");
+    }
+}

@@ -1,0 +1,298 @@
+﻿@page "/AddNewExercise"
+
+@using Azure.Storage.Blobs
+@using Azure.Storage.Blobs.Models
+@using Microsoft.Extensions.Configuration
+@using NRGSystemsPtAppWebSite;
+@using NRGSystemsPtAppWebSite.Models;
+@using NRGSystemsPtAppWebSite.Services
+
+@* @inject FunctionRestService apiClient *@
+@inject ExerciseRestFunction apiClient
+@inject BlobServiceClient blobService
+@inject NavigationManager NavigaitonManager
+@inject IConfiguration config
+
+<h3>
+    AddNewExercise
+
+<NavLink class="nav-link" href="https://ezgif.com/video-to-gif">
+    <span class="oi oi-plus" aria-hidden="true"> Open website to process video </span>
+</NavLink>
+</h3>
+
+<div>
+    <InputFile OnChange="@LoadFiles" class="form-control" multiple accept=".gif, .mp4, .jpeg" />
+
+    <img src="@ImagePath" id="ViewImage" /> @* alt= @bind="file.Name" /> *@
+    @* <label for="Name" class="control-label" @bind="@obj.ImageGif" ></label> *@
+
+        <br />
+
+        <div class="for-group">
+            <label for="Name">Exercise Name</label>
+            <InputText id="Name" class="form-control" @bind-Value="obj.ExerciseName"/>
+@*             <input form="ExerciseName" 
+                placeholder="the name of the exercise" 
+                class="form-control" 
+                @bind="@obj.ExerciseName" />
+ *@        </div>
+        <br />
+        <div class="for-group">
+            <label for="InstructionPreperation" 
+                   class="control-label">Preperation</label>
+            <input form="InstructionPreperation" 
+                   placeholder="text to instruct how to begin the exercise" 
+                   class="form-control" @bind="@obj.InstructionPreperation" />
+        </div>
+        <br />
+        <div class="for-group">
+            <label for="InstructionExecution" 
+                   class="control-label">Execution</label>
+            <input form="InstructionExecution" 
+                   placeholder="text how to perform the exercise" 
+                   class="form-control" @bind="@obj.InstructionExecution" />
+        </div>
+        <br />
+        <div class="for-group">
+            <label for="Comments" 
+                   class="control-label">Comments</label>
+            <input form="Comments" 
+                   placeholder="any additional comments a trainer wishes to make about equipment or form." 
+                   class="form-control" @bind="@obj.Comments" />
+        </div>
+        <br />
+        <div>
+            <label> Mechanics </label>
+            <select name="searchMechs" @bind="@obj.ClassificationMechanics">
+                <option selected disabled> -- compound(building) or isolation(shaping) -- </option>
+                <option value="compound"> BUILDING </option>
+                <option value="isolation"> SHAPING </option>
+                <option value="fitness"> FITNESS </option>
+            </select>
+        </div>
+        <br />
+        <div>
+            <label> ROM </label>
+            <select name="searchRom" @bind="@obj.ClassificationROM">
+                <option selected disabled> -- compound(building) or isolation(shaping) -- </option>
+                <option value="str"> Stretch</option>
+                <option value="mid"> Mid Range </option>
+                <option value="con"> Contracted </option>
+            </select>
+        </div>
+        <br />
+        <div>
+            <label> Force </label>
+            <select name="searchForce" @bind="@obj.ClassificationForce" >
+                <option selected disabled> -- push pull or legs -- </option>
+                <option value="Push"> PUSH </option>
+                <option value="Pull"> PULL </option>
+                <option value="Legs"> LEGS </option>
+            </select>
+        </div>
+        <br />
+        <div>
+            <label> Target Muscle </label>
+        <select name="searchMuscle" @bind="@obj.MuscleTarget">
+                <option selected disabled> -- primary muscle worked -- </option>
+            @foreach (var muscle in Muscles.MuscleList)
+            {
+                <option > @muscle  </option>
+            }
+        </select>
+    </div>
+    <br />
+    <div>
+        <label> Muscle Group </label>
+        <select name="searchGroup" @bind="@obj.MuscleGroup">
+            <option selected disabled> -- muscle group -- </option>
+            <option value="Chest"> CHEST</option>
+            <option value="Back"> BACK</option>
+            <option value="Quad"> QUAD</option>
+            <option value="Hamstring"> HAMSTRING</option>
+            <option value="LowerLeg"> LOWER LEG</option>
+            <option value="Shoulder"> SHOULDER</option>
+            <option value="Arms"> ARMS</option>
+            <option value="Core"> CORE</option>
+        </select>
+    </div>
+    <br />
+    <table class="table">
+        <tr>
+            <th> Synergist </th>
+            <th> Stabilizers </th>
+        </tr>
+        <tr>
+            <td>
+                @foreach (var synergist in SynergistsList)
+                {
+                    <li>
+                        <input type="checkbox" @bind="synergist.IsChecked" />
+                        <input @bind="synergist.Name" /> 
+                    </li>
+                }
+            </td>
+            <td>
+                @foreach (var muscle in AllMuscles)
+                {
+                    <li>
+                        <input type="checkbox" @bind="muscle.IsChecked" />
+                        <input @bind="muscle.Name" />
+                    </li>
+                }
+            </td>
+        </tr>
+    </table>
+    <br /> 
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <input type="button" class="btn btn-primary" @onclick="@CreateNewExercise" value="Save Exercise" />
+                <input type="button" class="btn btn-danger" @onclick="@Cancel" value="Cancel" />
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (errors.Count > 0)
+{
+    <h2> ERRORS </h2>
+    <ul class="text-danger">
+        @foreach (var error in errors)
+        {
+            <li>@error</li>
+        }
+    </ul>
+}
+
+
+@code 
+{
+    private long maxFileSize = 1024 * 1024 * 16; // represents 16mb
+    private int maxAllowedFiles = 1;
+    private string originalPath = string.Empty;
+
+    private List<string> errors = new();
+    private List<string> ListOfMuscle = new();
+    private string _muscleSynergists = string.Empty;
+    private string _muscleStabilizers = string.Empty;
+    private List<Muscle> AllMuscles = new();
+
+    string newBlobName = string.Empty;
+    string loggedInUser = "exercisevids";
+    bool loadedMedia = false;
+    bool uploadSuccessful = false;
+
+    Exercise obj = new Exercise();
+
+    // public IFormFile file { get; set; }
+    public List<Synergist> SynergistsList = new();
+
+    [Parameter]
+    public string ImagePath { get; set; } = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        var synergists = Synergists.GetSynergists();
+        SynergistsList.AddRange(synergists);
+        AllMuscles = Muscles.GetMuscles();
+    }
+
+    protected async void CreateNewExercise()
+    {
+        CheckChanged();
+
+        if (obj.ImageGif is null)
+               obj.ImageGif = "No Vid";
+
+
+        // Exercise newEx = new();
+        // newEx.ExerciseName = "Lat Pulldowns" ;
+        // newEx.ImageGif = "https://nrgptappstorage.blob.core.windows.net/exercisevids/lat_pulldown_wide.gif";
+        // newEx.InstructionPreperation = "Sit on the seat and adjust the thigh pads to brace you into place. The bar should be held so hands are at a width wider than perpendicular while upper arms are parallel.";
+        // newEx.InstructionExecution = "Keep head up. Start the movement by retracting and depressing your shoulder blades, once in position, then start retracting the elbows. When fully retracted, squeeze the back for about a second.";
+        // newEx.Comments = "Dont facilitate the movement with momentum from swinging the upper body.";
+        // newEx.ClassificationMechanics = "compound";
+        // newEx.ClassificationROM = "Mid";
+        // newEx.ClassificationForce = "Pull";
+        // newEx.MuscleTarget = "Latissimus Dorsi";
+        // newEx.MuscleGroup = "Back";
+        // newEx.MuscleSynergists = "Latissimus Dorsi, Rhomboids, Trapezius, Lower, Trapezius Middle";
+        // newEx.MuscleStabilizers = "ErectorSpinae, GluteusMaximus, Hamstrings";
+        // newEx.Enabled = 1;
+        // HttpClient client = new();
+        
+        // var req = new HttpRequestMessage(HttpMethod.Post, new Uri($"http://localhost:7074/api/CreateAnExercise?exercise={newEx}"));
+        // await client.SendAsync(req);
+
+
+        await apiClient.CreateAnExercise(obj);
+        NavigaitonManager.NavigateTo("exercises/all");
+    }
+
+    protected void CheckChanged()
+    {
+        foreach (var syn in SynergistsList)
+        {
+            if (syn.IsChecked)
+            {
+                _muscleSynergists += syn.Name + ", ";
+            }
+        }
+        foreach (var mus in AllMuscles)
+        {
+            if (mus.IsChecked)
+            {
+                _muscleStabilizers += mus.Name + ", ";
+            }
+        }
+        obj.MuscleSynergists = _muscleSynergists;
+        obj.MuscleStabilizers = _muscleStabilizers;
+    }
+
+    protected void Cancel()
+    {
+        NavigaitonManager.NavigateTo("exercises");
+    }
+
+    private async Task LoadFiles(InputFileChangeEventArgs e)
+    {
+        errors.Clear();
+        // ImagePath = $"https://nrgptappstorage.blob.core.windows.net/exercisevids/{e.File.Name}";
+         ImagePath = $"~/Images/UploadedVideos/RealSteel/{e.File.Name}";
+        // ImagePath = $"C:/Users/nrg64/Documents/NRGSystemsPersonalTrainingApp/Vids/gifs";
+
+        obj.ImageGif = $"https://nrgptappstorage.blob.core.windows.net/exercisevids/{e.File.Name}";
+
+        if (e.FileCount > maxAllowedFiles)
+        {
+            errors.Add($"Error: Attempting to upload {e.FileCount} files, but only  {maxAllowedFiles} files allowed");
+            return;
+        }
+
+        foreach (var file in e.GetMultipleFiles(maxAllowedFiles))
+        {
+
+            uploadSuccessful = false;
+
+            // immediately save to blob storage
+            var containerClient = blobService.GetBlobContainerClient(loggedInUser);
+
+            await containerClient.CreateIfNotExistsAsync(PublicAccessType.Blob);
+
+            newBlobName = $"{Guid.NewGuid().ToString()}.gif";
+
+            await containerClient.UploadBlobAsync(file.Name, e.File.OpenReadStream(maxAllowedSize: maxFileSize));
+
+            loadedMedia = true;
+
+            uploadSuccessful = true;
+
+            obj.ImageGif = $"https://nrgptappstorage.blob.core.windows.net/exercisevids/{file.Name}";
+        }
+    }
+}
+
+

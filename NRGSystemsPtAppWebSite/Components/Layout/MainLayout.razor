@@ -1,13 +1,24 @@
 ﻿@inherits LayoutComponentBase
 
-<div class="page">
+<div class="page" style="background-color:#cccccc">
     <div class="sidebar">
         <NavMenu />
     </div>
 
     <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+        <div class="top-row px-4" style="color:black">
+            @* <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a> *@
+            <h1 style="font-family:Cooper; font-weight:600">
+                P.T. APP ASSISTANT
+            </h1>
+            <AuthorizeView>
+                <NotAuthorized>
+                    <a style="font-family:Cooper; font-weight:500" href="/login">Login</a>
+                </NotAuthorized>
+                <Authorized>
+                    <a style="font-family:Cooper; font-weight:500" href="/logout">Logout</a>
+                </Authorized>
+            </AuthorizeView>
         </div>
 
         <article class="content px-4">

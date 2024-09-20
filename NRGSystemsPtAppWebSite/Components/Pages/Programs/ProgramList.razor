@@ -1,0 +1,66 @@
+﻿@page "/ProgramList"  
+
+@using NRGSystemsPtAppWebSite.Services
+@using NRGSystemsPtAppWebSite;
+@using NRGSystemsPtAppWebSite.Models;
+
+@inject FunctionRestService apiClient
+
+<h3 style ="color: #1e90ff; font-family:Cooper">Programs</h3>
+
+@if (ListOfPrograms is null)
+{
+    <p><em>Loading ..........</em></p>
+}
+else
+{
+    <table class="table" style="color:#1e90ff; font-family:Cooper">
+        <thead>
+            <tr>
+                <th>  </th>
+                <th> Client ID </th>
+                <th> Program Title </th>
+                <th> Date Issued </th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var program in ListOfSelectedPrograms)
+            {
+                <tr>
+                    <td>
+                        <a class="nav-link btn btn-primary" href="ProgramView/@program.ProgramTitle">
+                            <span class="oi oi-magnifying-glass" aria-hidden="true">Select Workout</span>
+                        </a>
+                    </td>
+                    <td> @program.ClientId </td>
+                    <td> @program.ProgramTitle </td>
+                    <td> @program.DateIssued </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+@code {
+    public static List<ClientsProgram> ListOfPrograms = new List<ClientsProgram>();
+    public static List<ClientsProgram> ListOfSelectedPrograms = new List<ClientsProgram>();
+
+    List<string> tempTitleList = new List<string>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        ListOfPrograms = new();
+        ListOfSelectedPrograms = new();
+        var aListOfPrograms = await apiClient.GetAllPrograms();
+
+        foreach (var program in aListOfPrograms)
+        {
+            if ((!tempTitleList.Contains(program.ProgramTitle))) //&& (program.ClientId == 0))
+            {
+                tempTitleList.Add(program.ProgramTitle);
+                ListOfSelectedPrograms.Add(program);
+            }
+        }
+    }
+}
+

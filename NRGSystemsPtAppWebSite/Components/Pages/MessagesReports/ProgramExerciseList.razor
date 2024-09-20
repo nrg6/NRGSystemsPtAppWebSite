@@ -1,0 +1,43 @@
+﻿@using NRGSystemsPtAppWebSite.Models
+
+<table class="table" style="color:#1e90ff">
+    <thead>
+        <tr id="ReportHeaders">
+            <th> PROGRAM EXERCISES </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var exercise in ProgramList)
+        {
+            <tr>
+                <td style="color:#1e90ff">
+                    @exercise.NameOfExercise
+                </td>
+                <input type="button" class="io oi-flash" style="color:#1e90ff;padding:1rem" @onclick="()=> EditSelectedExercise(exercise)" value="Edit" />
+                @* <input type="button" class="io oi-flash" @onclick="()=> SubmitSelectedExercise(exercise)" value="Submit Program" /> *@
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+@code {
+    [Parameter]
+    public List<ClientsProgram> ProgramList { get; set; } = [];
+
+    [Parameter]
+    public EventCallback<ClientsProgram> NewEdit { get; set; }
+
+    [Parameter]
+    public EventCallback<ClientsProgram> NewSubmission { get; set; }
+
+    // protected async Task SubmitSelectedExercise(ClientsProgram exercise)
+    // {
+    //     await NewSubmission.InvokeAsync(exercise);
+    // }
+
+    protected async Task EditSelectedExercise(ClientsProgram exercise)
+    {
+        await NewEdit.InvokeAsync(exercise);
+    }
+}

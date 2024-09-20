@@ -1,0 +1,215 @@
+﻿@page "/createProgram"
+
+@using NRGSystemsPtAppWebSite;
+@using NRGSystemsPtAppWebSite.Components.Pages.Exercises
+@using NRGSystemsPtAppWebSite.Models;
+@using NRGSystemsPtAppWebSite.Services
+@using System.Security.Claims
+@* @using ProgrammerComponents; *@
+
+@inject ClientRestFunctionServices apiClientClient
+@inject FunctionRestService apiClient 
+@inject ExerciseRestFunction apiExerciseClient
+@inject NavigationManager NavigaitonManager
+@rendermode InteractiveServer
+
+<h3>Create Program</h3>
+
+<hr />
+<form>
+    <div class="row">
+        <div class="col-md-8">
+            <div class="for-group">
+
+
+                <AuthorizeView Roles="client">
+                    <Authorized>
+                        <label style="font-size:x-large" for="ClientsNameLabel" class="control-label">@httpContext.User.Identity.Name</label>
+                    </Authorized>
+                </AuthorizeView>
+                <AuthorizeView Roles="administrator">
+                    <Authorized>
+                        <label for="ClientsNameLabel" class="control-label">Clients Name</label>
+                        <select asp-for="ClientsNameLabel" @bind="@selectedClient">
+                            <option> -- Select a client -- </option>
+                            @foreach (var item in allClients)
+                            {
+                                <option value="@item">
+                                    @item
+                                </option>
+                            }
+                        </select>
+                    </Authorized>
+                </AuthorizeView>
+            </div>
+            <br />
+
+            <div class="for-group">
+                <label for="ProgramName" class="control-label">Name Of Program (This should remain the same for all exercises to isolate this program)</label>
+                <input form="ProgramName" class="form-control" @bind="@NameOfTheProgram" />
+            </div>
+            <br />
+
+            <p>
+                There are 2 program types, “sets and reps” and “circuits”.
+            </p>
+            <p>
+                To select sets and reps, add a comma into the weights category.
+            </p>
+            <p>
+                To select a circuits program, only add one weight to the program.
+            </p>
+            <br />
+
+            <div class="for-group">
+                <label for="ExerciseName" class="control-label">Exercise Name</label>
+                <select name="ExerciseName" @bind="selectedExercise">
+                    <option> -- Select an exercise -- </option>
+                    @foreach (var item in allExercises)
+                    {
+                        <option value="@item">
+                            @item
+                        </option>
+                    }
+                </select>
+            </div>
+            <br />
+
+            <p>Separate the reps and sets by a comma</p>
+            <div class="for-group">
+                <label for="Weights" class="control-label">Weights</label>
+                <input form="Weights" class="form-control" @bind="@program.Weights" />
+
+                <label for="Reps" class="control-label">Reps</label>
+                <input form="Reps" class="form-control" @bind="@program.Repetitions" />
+            </div>
+            <br />
+            <div>
+            <AuthorizeView Roles="administrator">
+                <Authorized>
+                    <p>Add any comments specific to this client.</p>
+                    <div class="for-group">
+                        <label for="PtsComments" class="control-label">PTs Comments</label>
+                        <input form="PtsComments" class="form-control" @bind="@program.PtComments" />
+                    </div>
+                </Authorized>
+            </AuthorizeView>
+            </div>
+            <br />
+        </div>
+    </div>
+@*     <div class="row">
+        <div class="col-md-4">
+            <div class="form-group"> *@
+@*             </div>
+        </div>
+    </div> *@
+</form>
+<AuthorizeView Roles="administrator, client">
+    <Authorized>
+        <input type="button" class="oi oi-primary" @onclick="AddNewExercise" value="Add Another Exercise" />
+        <input type="button" class="io oi-flash" @onclick="CreateNewProgram" value="Save Program" />
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    [CascadingParameter]
+    public HttpContext? httpContext { get; set; }
+
+    [Parameter]
+    public List<string> allClients { get; set; } = new();
+    [Parameter]
+    public List<string> allExercises { get; set; } = new();
+    [Parameter]
+    public string selectedClient { get; set; } = string.Empty;
+    [Parameter]
+    public string selectedExercise { get; set; } = string.Empty;
+    [Parameter]
+    public string NameOfTheProgram { get; set; } = string.Empty;
+    [Parameter]
+    public ClientsProgram program { get; set; } = new();
+
+    Models.Clients client = new(); 
+    List<Models.Clients> clientList = new();
+    List<Models.Exercise> exerciseList = new();
+    List<Models.ClientsProgram> programExerciseList = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        clientList = await Task.Run(() => apiClientClient.GetAllClients());
+        exerciseList = await Task.Run(() => apiExerciseClient.GetAllExercises());
+
+        Models.Clients dummy = GetDummy();
+        clientList.Add(dummy);
+
+        foreach(var cli in clientList)
+        {
+            var mixString = $"{cli.ID} =-= {cli.FullName}";
+            allClients.Add(mixString);
+        }
+        foreach(var exe in exerciseList)
+        {
+            var mixString = $"{exe.ExerciseName} =+= {exe.ImageGif}";
+            allExercises.Add(mixString);
+        }
+    }
+    
+    private Clients GetDummy()
+    {
+        return new Models.Clients()
+        {
+            ID = 0,
+                FirstName = "Template",
+                LastName = "Program",
+                UserName = "dum",
+                Password = "0",
+                Email  = "",
+                Phone = "0",
+                DoB = DateTime.Now.Date,
+                Sex = "Male",
+                Height = 0,
+                Weight = 0,
+                Enabled = 0,
+                ProgramRevisionNo = "0",
+                ReportRevisionNo = "0",
+                MessageRevisionNo = "0"
+        };
+
+    }
+    
+    private async Task CreateNewProgram() => await apiClient.AddNewProgramList(programExerciseList);
+
+    private void AddNewExercise()
+    {          
+        program.ProgramTitle = NameOfTheProgram;
+        var selectedClientSplitter = selectedClient.Split("=-=");
+        program.ClientId = int.Parse(selectedClientSplitter[0]);
+        program.ClientName = selectedClientSplitter[1];
+        var selectedExerciseSplitter = selectedExercise.Split("=+=");
+        program.NameOfExercise = selectedExerciseSplitter[0];
+        program.ImageGifLocation = selectedExerciseSplitter[1];
+        // program.ClientsComments = " ";
+        // program.RepsCompleted = "0";
+        // program.TrainingTime = "0";
+        // program.RestingTime = "0";
+        program.DateIssued = (DateTime.Now.Date).ToString();
+        if (program.PtComments is null)
+            program.PtComments = " ";
+
+
+        programExerciseList.Add(program);
+        program = new();
+    }
+
+    protected void Cancel()
+    {
+        NavigaitonManager.NavigateTo("clients");
+    }
+
+    public void OnPost()
+    {
+        
+    }
+}

@@ -1,0 +1,257 @@
+﻿@page "/editReportProgram/{programId}/{reportId}"
+
+@using NRGSystemsPtAppWebSite;
+@using NRGSystemsPtAppWebSite.Models;
+@using NRGSystemsPtAppWebSite.Services
+@inject FunctionRestService apiClient
+@inject ExerciseRestFunction apiExerciseClient
+@inject NavigationManager NavigaitonManager
+
+<h3>Edit @program.NameOfExercise For @program.ClientName </h3>
+
+@if (programList is null)
+{
+    <p><em>Loading ..........</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th> Client ID </th>
+                <th> Client Name </th>
+                <th> Program Title </th>
+                <th> Date Issued </th>
+                <th> Exercise </th>
+            </tr>
+        </thead>
+
+        <tbody>
+            <tr>
+                <td> @program.ClientId </td>
+                <td> @program.ClientName </td>
+                <td> @program.ProgramTitle </td>
+                <td> @program.DateIssued </td>
+                <td> @program.NameOfExercise </td>
+            </tr>
+        </tbody>
+    </table>
+
+
+    <thead>
+        <tr>
+            <th> TARGET WEIGHT </th>
+            <th> USED WEIGHT</th>
+            <th> TARGET REPS </th>
+            <th> ACHIEVED REPS </th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var weight in usedWeights)
+        {
+            if (repWeighIndex >= usedWeights.Count)
+            {
+                repWeighIndex = 0;
+            }
+            <tr>
+                <td> @targetWeights[repWeighIndex] </td>
+                <td> @usedWeights[repWeighIndex] </td>
+                <td> @targetReps[repWeighIndex] </td>
+                <td> @achievedReps[repWeighIndex] </td>
+            </tr>
+            repWeighIndex++;
+        }
+    </tbody>
+
+}
+<hr />
+<form>
+    <div class="row">
+        <div class="col-md-8">
+            <div class="for-group">
+                <label for="ProgramName" class="control-label">Name Of Program</label>
+                <input form="ProgramName" class="form-control" @bind="@NameOfTheProgram" />
+            </div>
+            <div class="for-group">
+                <label for="ExerciseName" class="control-label">Exercise Name</label>
+                <input form="ExerciseName" class="form-control" @bind="selectedExercise" />
+                <select name="ExerciseName" @bind="selectedExercise">
+                    @foreach (var item in allExercises) // exerciseList) //  
+                    {
+                        <option value="@item">
+                           @item 
+                        </option>
+                    }
+                </select>
+            </div>
+            <div class="for-group">
+                <label for="Weights" class="control-label">Weights</label>
+                <input form="Weights" class="form-control" @bind="@program.Weights" />
+            </div>
+            <div class="for-group">
+                <label for="Reps" class="control-label">Reps</label>
+                <input form="Reps" class="form-control" @bind="@program.Repetitions" />
+            </div>
+            <div class="for-group">
+                <label for="ClientsComments" class="control-label">Clients Comments</label>
+                <input form="ClientsComments" class="form-control" @bind="@report.ClientsComments" />
+            </div>
+            <div class="for-group">
+                <label for="PtsComments" class="control-label">PTs Comments</label>
+                <input form="PtsComments" class="form-control" @bind="@program.PtComments" />
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <input type="button" class="io oi-flash" @onclick="@CreateNewProgram" value="Update Clients Program" />
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <input type="button" class="io oi-flash" @onclick="@Cancel" value="Cancel" />
+            </div>
+        </div>
+    </div>
+</form>
+
+
+@code {
+    [Parameter]
+    public List<string> allExercises { get; set; } = new();
+    [Parameter]
+    //public Exercise selectedExercise { get; set; } 
+    // [Parameter]
+    public string selectedExercise { get; set; } = string.Empty;
+    [Parameter]
+    public string buttonText { get; set; } = string.Empty;
+    [Parameter]
+    public string NameOfTheProgram { get; set; } = string.Empty;
+    [Parameter]
+    public string programId { get; set; } = string.Empty;
+    [Parameter]
+    public string reportId { get; set; } = string.Empty;
+    [Parameter]
+    public int repWeighIndex { get; set; }
+    [Parameter]
+    public int programIndex { get; set; }
+
+    ClientsProgram program = new();
+    ProgramReports report = new();
+    Clients selectedClient = new();
+    List<Exercise> exerciseList = new();
+    List<ProgramReports> reportList = new();
+    List<ClientsProgram> programList = new();
+    List<ClientsProgram> newProgramList = new();
+
+    List<double> targetWeights = [];
+    List<double> usedWeights = [];
+    List<double> targetReps = [];
+    List<double> achievedReps = [];
+
+    private string weightsStringCopy = string.Empty;
+    private string repsStringCopy = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        programList = await apiClient.GetProgramListAsync(int.Parse(programId));
+        reportList = await apiClient.GetReportListAsync(int.Parse(reportId));
+        exerciseList = await apiExerciseClient.GetAllExercises();
+
+        NameOfTheProgram = program.ProgramTitle;
+        // selectedExercise = exerciseList.Where(a => a.ExerciseName == program.NameOfExercise) as Exercise;
+        selectedExercise = program.NameOfExercise;
+
+        var underScoreSplitter = report.Weights.Split('_');
+
+        var spli = underScoreSplitter[1].Split(' '); // currentReport.Weights.Split(' ');
+        targetWeights = [];
+        usedWeights = [];
+        targetReps = [];
+        achievedReps = [];
+
+        foreach (var sp in spli)
+        {
+            if (sp.Contains("-"))
+            {
+                var spli1 = sp.Split('-');
+                int cou = spli1.Count();
+                if (cou > 1)
+                {
+                    targetWeights.Add(double.Parse(spli1[0]));
+                    usedWeights.Add(double.Parse(spli1[1]));
+                }
+            }
+        }
+
+        underScoreSplitter = report.RepsCompleted.Split('_');
+
+        spli = underScoreSplitter[1].Split(' ');    // spli = currentReport.RepsCompleted.Split(' ');
+        foreach (var sp in spli)
+        {
+            if (sp.Contains("-"))
+            {
+                var spli1 = sp.Split('-');
+                int cou = spli1.Count();
+                if (cou > 1)
+                {
+                    targetReps.Add(double.Parse(spli1[0]));
+                    achievedReps.Add(double.Parse(spli1[1]));
+                }
+            }
+        }
+
+        foreach (var ex in exerciseList)
+        {
+            allExercises.Add($"{ex.ExerciseName}");
+        }
+    }
+
+    protected async Task CreateNewProgram()
+    {
+        string selExName = string.Empty;
+        string selExGif = string.Empty;
+        selectedExercise = selectedExercise.Trim(); // Replace(" ", "");
+        foreach (var ex in exerciseList)
+        {
+            if(ex.ExerciseName == selectedExercise)
+            {
+                selExName = ex.ExerciseName;
+                selExGif = ex.ImageGif;
+            }
+        }
+
+        ClientsProgram newProgram = new();
+        newProgram.ClientId = program.ClientId;
+        newProgram.ClientName = program.ClientName;
+
+        newProgram.ProgramTitle = NameOfTheProgram;
+        newProgram.DateIssued = DateTime.Now.Date.ToString();
+        newProgram.NumberOfVisits = program.NumberOfVisits + 1;
+        newProgram.TimesProgramUsed = program.TimesProgramUsed + 1;
+        newProgram.NameOfExercise = selExName;
+        newProgram.ImageGifLocation = selExGif;
+        newProgram.Weights = program.Weights;
+        newProgram.Repetitions = program.Repetitions;
+        newProgram.PtComments = program.PtComments;
+        // newProgram.ProgramId = program.ProgramId;
+
+        await (_ = apiClient.CreateAProgram(newProgram));
+        _ = apiClient.DeleteProgram(program.ProgramId);
+
+        report.Reported++;
+        _ = apiClient.EditAReport(report);
+        NavigaitonManager.NavigateTo("/report");
+    }
+
+
+    protected async Task Cancel()
+    {
+        NavigaitonManager.NavigateTo("/report");
+    }
+
+}
