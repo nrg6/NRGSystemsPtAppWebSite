@@ -1,0 +1,101 @@
+﻿@page "/ptPage"
+
+@using NRGSystemsPtAppWebSite.Models
+@using NRGSystemsPtAppWebSite.Services
+
+@inject AppDownloadService appServices
+
+@rendermode InteractiveServer
+
+@if (CurrentPt is null)
+{
+    <p><em>Loading ..........</em></p>
+}
+else
+{
+    <table style="columns:auto, auto; font-family:Cooper; font-size:xx-large">
+        <thead>
+            <tr>
+                <th>
+                    <label style="text-align:center">@CurrentPt.Name</label>
+                </th>
+            </tr>
+            <tr>
+                <th>
+                    <img src="@CurrentPt.ImageGif" width="400" />
+                </th>
+            </tr>
+            <tr>
+                <th>
+                    <label>@CurrentPt.Phone</label>
+                </th>
+            </tr>
+            <tr>
+                <th>
+                    <label>@CurrentPt.Email</label>
+                </th>
+            </tr>
+        </thead>
+    </table>
+    if(PtList.Count > 1)
+    {
+        <button style="color:black; font-family:Cooper;font-size:x-large"
+                class="btn btn-primary" @onclick="DecreaseIndex">PREVIOUS PT</button>
+        <button style="color:black; font-family:Cooper;font-size:x-large"
+                class="btn btn-primary" @onclick="IncreaseIndex">
+            NEXT PT
+        </button>
+    }
+}
+
+@code 
+{
+    [Parameter]
+    public List<PtModel> PtList { get; set; }
+    [Parameter]
+    public PtModel CurrentPt { get; set; }
+    [Parameter]
+    public string ImagePath { get; set; }
+    [Parameter]
+    public int PtIndex { get; set; } = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        PtList = await appServices.GetAllPTsListAsync();
+        CurrentPt = PtList[0];
+        // foreach (var a in PtList)
+        // {
+        //     CurrentPt = new();
+        //     CurrentPt.Name = a.Name;
+        //     CurrentPt.ImageGif = a.ImageGif;
+        //     CurrentPt.Qualifications = a.Qualifications;
+        //     CurrentPt.Specialities = a.Specialities;
+        //     CurrentPt.Email = a.Email;
+        //     CurrentPt.Phone = a.Phone;
+        //     ImagePath = a.ImageGif;
+        // }
+    }        
+    private void IncreaseIndex(MouseEventArgs e)
+    {
+        PtIndex++;
+        if(PtIndex >= PtList.Count)
+        {
+            PtIndex = 0;
+        }
+        CurrentPt = PtList[PtIndex];
+    }
+    private void DecreaseIndex(MouseEventArgs e)
+    {
+        if (PtIndex == 0)
+        {
+            PtIndex = PtList.Count - 1;
+        }
+        else
+        {
+            PtIndex--;
+        }
+        CurrentPt = PtList[PtIndex];
+    }
+}
+
+

@@ -33,25 +33,25 @@
             </Authorized>
         </AuthorizeView>
 
-        <AuthorizeView Roles="administrator, client, user">
-            <Authorized>
+@*         <AuthorizeView Roles="administrator, client, user">
+            <Authorized> *@
                 <div class="nav-item px-3" style="font-family:Cooper">
                     <NavLink class="nav-link" href="muscles">
                         <span class="oi oi-list-rich" aria-hidden="true" style="font-family:Cooper"></span> Muscles
             </NavLink>
         </div>
-            </Authorized>
+@*             </Authorized>
         </AuthorizeView>
 
         <AuthorizeView Roles="administrator, client, user">
-            <Authorized>
+        <Authorized> *@
                 <div class="nav-item px-3" style="font-family:Cooper">
                     <NavLink class="nav-link" href="exercises/all">
                         <span class="oi oi-list-rich" aria-hidden="true" style="font-family:Cooper"></span> Exercises
             </NavLink>
         </div>
-            </Authorized>
-        </AuthorizeView>
+@*             </Authorized>
+        </AuthorizeView> *@
 
 
         @*         <div class="nav-item px-3">
@@ -160,7 +160,12 @@
         </div>
             </Authorized>
         </AuthorizeView>
-
+        
+        <div class="nav-item px-3" style="font-family:Cooper">
+            <NavLink class="nav-link" href="ptPage">
+                <span class="oi oi-list-rich" aria-hidden="true"></span> Contact
+            </NavLink>
+        </div>
 
     </nav>
 </div>

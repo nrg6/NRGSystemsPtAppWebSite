@@ -30,7 +30,8 @@ builder.Services.AddSweetAlert2();
 
 builder.Services.AddMudServices();
 
-builder.Services.AddScoped<AppStateService>();
+//builder.Services.AddScoped<AppStateService>();
+builder.Services.AddScoped<AppDownloadService>();
 
 builder.Services.AddSingleton<FunctionRestService>();
 builder.Services.AddSingleton<ClientRestFunctionServices>();

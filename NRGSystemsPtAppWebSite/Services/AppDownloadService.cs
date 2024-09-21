@@ -36,5 +36,32 @@ namespace NRGSystemsPtAppWebSite.Services
             }
             return null;
         }
+
+        /// <summary>
+        /// Using Azure Functions
+        /// </summary>
+        /// <returns> All Enabled Personal Trainers </returns>
+        public async Task<List<PtModel>> GetAllPTsListAsync()
+        {
+            var pts = new List<PtModel>();
+            var retPts = new List<PtModel>();
+            try
+            {
+                pts = await _functionClient.GetFromJsonAsync<List<PtModel>>("api/GetAllPts");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+
+            foreach (var pt in pts)
+            {
+                if (pt.Enabled != 0)
+                {
+                    retPts.Add(pt);
+                }
+            }
+            return retPts;
+        }
     }
 }
