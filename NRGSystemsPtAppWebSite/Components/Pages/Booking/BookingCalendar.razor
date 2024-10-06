@@ -9,218 +9,199 @@
 @inject CalendarFunctionServices apiCalendar
 @inject SweetAlertService sweetAlertService
 
-@* @inject AppStateService appStateService *@
-@* @implements IDisposable *@
-
 @rendermode InteractiveServer
 
-<MudThemeProvider/>
-<MudDialogProvider/>
-<MudSnackbarProvider/>
-<MudPopoverProvider/>
-@* 
-<MudLayout>
-    <MudMainContent>
-        <h1 style="color:#1e90ff">Book your session...</h1>
-    </MudMainContent>
-</MudLayout> *@
+<div>
+    <div>
+        <label for="Client" style="color:#1e90ff; font-family:Cooper; font-size:larger" align-content:center; width:max-content">CLIENT</label>
+        <input for="Client" style="color:#1e90ff; font-family:Cooper; font-size:larger" type="text" @bind="ClientsName" />
+    </div>
+    <br />
+    <div>
+        <label for="Calendar" style="color:#1e90ff; font-family:Cooper; font-size:larger">SELECT THE DAY</label>
+        <input for="Calendar" style="color:#1e90ff; font-family:Cooper; font-size:larger" type="date" @onchange="UpdateDayView" />
+        @* <input for="Calendar" style="color:#1e90ff; font-family:Cooper; font-size:larger" type="date" @onchange="UpdateDayView" @bind="BookingDate" /> *@
+    </div>
+    <br />
+    <div>
+        <label style="color:#1e90ff; font-family:Cooper; font-size:larger">SELECT THE START TIME</label>
+        <select class="selection-box" style="color:#1e90ff; font-family:Cooper; font-size:larger"
+                @onchange="StartTimeSet">
+            <option style="color:#1e90ff; font-family:Cooper; font-size:larger">Start time</option>
+            @foreach (var time in StartTimes)
+            {
+                <option value="@time"
+                        style="color:#1e90ff; font-family:Cooper; font-size:larger"> @time</option>
+            }
+        </select>
+    </div>
+    <br />
+    <div>
+        <label style="color:#1e90ff; font-family:Cooper; font-size:larger">SELECT THE DURATION</label>
+        <select class="selection-box" style="color:#1e90ff; font-family:Cooper; font-size:larger"
+                @onchange="UpdateDuration">
+            <option style="color:#1e90ff; font-family:Cooper; font-size:larger">Select Duration</option>
+            @foreach (var goal in DurationList)
+            {
+                <option value="@goal"
+                        style="color:#1e90ff; font-family:Cooper; font-size:larger"> @goal</option>
+            }
+        </select>
+    </div>
+    <br />
 
-<table>
-@*      <thead>
-        <tr>
-            <th style="align-content:center">
-                <label style="color:#1e90ff; align-content:center; width:max-content">SELECT THE DATE..</label>
-            </th>
-            <th>
-                <label style="color:#1e90ff">SELECT THE START TIME..</label>
-            </th>
-            <th>
-                <label style="color:#1e90ff">SELECT THE END TIME..</label>
-            </th>
-            <th>
-                <label style="color:#1e90ff">SELECT YOUR TRAINING GOALS..</label>
-            </th>
-            <th>
-                <label style="color:#1e90ff">SUBMIT YOUR BOOKING FOR REVIEW.</label>
-            </th>
-        </tr>
-    </thead>  *@
-    <tbody>
-        <tr>
-            <td >
-                <MudDatePicker PickerVariant="PickerVariant.Static" 
-                               Label="SELECT DATE"
-                               OnClick="DateSelected"
-                               DateChanged="DateSelected"
-                               style="font-size:xx-large; color:##2B0B98; background-color:#1e90ff; font-family:Cooper"
-                               @bind-Text="_date" 
-                               Color="Color.Primary"
-                               AdornmentColor="Color.Secondary" />
-            </td>
-            <td>
-                <MudTimePicker PickerVariant="PickerVariant.Static"
-                               Label="START TIME"
-                               style="font-size:xx-large; color:#1e90ff; background-color:transparent"
-                               @bind-Time="_timeStart" 
-                               @onselectionchange="StartTimeSet" 
-                               Color="Color.Transparent"
-                               AdornmentColor="Color.Primary" />
-            </td>
-            <td>
-                <MudTimePicker PickerVariant="PickerVariant.Static"
-                               Label="end time"
-                               style="font-size:xx-large; color:#1e90ff; background-color:transparent"
-                               @bind-Time="_timeEnd" 
-                               @onselectionchange="EndTimeSet"
-                               Color="Color.Transparent"
-                               AdornmentColor="Color.Primary" />
-            </td>
-            <td>
-                <GoalSetter GoalSelectionMade="UpdateGoal"></GoalSetter>
-            </td>
-            <td>
-                <button style="font-size:large; color:#1e90ff" @onclick="CommitAppointment"> COMMIT </button>
-            </td>
-        </tr>
-    </tbody>       
-</table>
-
-<div style="width:stretch">
-    <DayTemplate TakenTimes="takenTimes"
-                 TimeStyles="timeStyles"
-                 TimeCounter="timeCounter"
-                 TakenTimesCount="takenTimes.Count"
-                 TimeStylesCount="timeStyles.Count"/>
+    <div>
+        <GoalSetter GoalSelectionMade="UpdateGoal"></GoalSetter>
+    </div>
+    <br />
+    <div>
+        <button style="color:#1e90ff; font-family:Cooper; font-size:larger" @onclick="CommitAppointment"> COMMIT </button>
+    </div>
+    <div>
+        <DayTemplate NewBookings ="_newBookings" />
+    </div>
 </div>
 
-@* <MudChip T="string">@state</MudChip> *@
-
 @code {
-    [Parameter]
-    public string _date { get; set; } = DateTime.UtcNow.Date.ToString("dd/MM/yyyy");
     [CascadingParameter]
     public HttpContext httpContext { get; set; }
-    // [Parameter]
-    // public EventCallback<string> CommitToAppointment { get; set; }
+    [Parameter]
+    public static string ClientsName { get; set; } = "";
+    public static int clientsID = 0;
 
+    [Parameter]
+    public string _date { get; set; } = DateTime.UtcNow.Date.ToString("dd/MM/yyyy");
+
+    CalendarEvents booking = new CalendarEvents();
+    [Parameter]
+    public DateTime BookingDate { get; set; } = DateTime.UtcNow;
     [Parameter]
     public static string GoalSelected { get; set; }
     [Parameter]
-    public static string JournalDate { get; set; }
+    public string[] DurationList { get; set; } = new[] { "30 mins", "45 mins", "1 hour" };
     [Parameter]
-    public static string BookingTime { get; set; }
+    public List<string> StartTimes { get; set; } = [];
 
     [Parameter]
-    public CalendarEvents newBooking { get; set; } = new();
+    public static List<CalendarEvents> _newBookings { get; set; } = new();
     [Parameter]
-    public static List<CalendarEvents> NewBookings { get; set; } = new();
-    [Parameter]
-    public static string state { get; set; } = "The times you have selected clash with a previous booking. Please change your start/end times";
+    public static List<CalendarEvents> _validBookings { get; set; } = new();
     [Parameter]
     public static List<CalendarEvents> dayBookings { get; set; } = new();
+
+    [Parameter]
+    public static string state { get; set; } = "The times you have selected clash with a previous booking. Please change your start/end times";
 
     private TimeSpan? _timeStart = new TimeSpan(08, 00, 00);
     private TimeSpan? _timeEnd = new TimeSpan(09, 00, 00);
 
-    List<string> takenTimes = new();
-    List<string> timeStyles = new();
-
-    public static int timeCounter = 0;
-    public static int clientsID = 0;
 
     protected override async Task OnInitializedAsync()
     {
-        NewBookings = await apiCalendar.GetAllCalendarEvent();
-
         if (httpContext is not null)
         {
             foreach (var claim in httpContext.User.Claims)
             {
+                if (claim.Type.Contains("givenname"))
+                {
+                    ClientsName = claim.Value;
+                }
                 if (claim.Type.Contains("sid"))
                 {
                     clientsID = int.Parse(claim.Value);
                 }
             }
         }
+        FillStartTimes();
+        _= UpdateCalendarView();
+    }
+
+    private async Task UpdateCalendarView()
+    {
+        _newBookings = await apiCalendar.GetAllCalendarEvent();
+        _validBookings = DayTemplate.CheckNewBookings(_newBookings);
     }
 
     private async Task DateSelected() // EventArgs e)
     {
         dayBookings = new();
-        foreach(var booking in NewBookings)
+        foreach (var booking in _newBookings)
         {
-            // if (DateTime.Parse(booking.BookingDate).ToString("dd/MM/yyyy") == _date)
             if (booking.BookingDate == _date)
             {
                 dayBookings.Add(booking);
             }
         }
-        // if(dayBookings.Count > 0)
-        // {
-        UpdateDay(dayBookings);
-
-        // this.appStateService.IsLoaded = false;
-        // // emulate an async loading event
-        // await Task.Delay(500);
-        // this.appStateService.IsLoaded = true;
-        // }
     }
 
-    void StartTimeSet(EventArgs e)
+    void StartTimeSet(ChangeEventArgs e)
     {
-        Console.WriteLine(e.ToString());
+        booking.StartTime = e.Value.ToString();
     }
 
     void UpdateGoal(string goal)
     {
-        GoalSelected = goal;
+        booking.Goal = goal;
     }
 
-    void EndTimeSet(EventArgs e)
+    async Task<bool> CheckBooking()
     {
-        Console.WriteLine(e.ToString());
+        if ((booking.Goal is null) || (booking.StartTime is null) ||
+            (booking.Duration is null) || (booking.BookingDate is null))
+        {
+            var result = await sweetAlertService.FireAsync(new SweetAlertOptions
+            {
+                Title = "You have missed some information",
+                Text = $"Check the values have been set",
+                Icon = SweetAlertIcon.Warning
+            });
+            return false;
+        }
+        return true;
     }
+
+    private readonly IDialogService _dialogService;
 
     private async Task CommitAppointment(MouseEventArgs e)
     {
-        newBooking = new();
+        booking.BookingDate = BookingDate.Date.ToString();
+        booking.DateBookingMade = DateTime.Now.Date.ToString();
 
-        newBooking.Goal = GoalSelected;
-        if (newBooking.Goal == "")
-            newBooking.Goal = "Weight Management";
+        bool filledIn = CheckBooking().Result;
+        if (!filledIn)
+            return;
 
-        newBooking.IsEmpty = false;
+
+        booking.IsEmpty = false;
         var dateSplitter = DateTime.UtcNow.ToString().Split(" ");
-        newBooking.DateBookingMade = dateSplitter[0]; // DateTime.UtcNow.ToString();
-        newBooking.BookingDate = _date;
-        newBooking.StartTime = _timeStart.ToString();
-        newBooking.Duration = _timeEnd.ToString();
-        newBooking.BookingClientId = clientsID;
+        booking.DateBookingMade = dateSplitter[0]; // DateTime.UtcNow.ToString();
+                                                   // booking.BookingDate = _date;
+                                                   // booking.StartTime = _timeStart.ToString();
+                                                   // booking.Duration = _timeEnd.ToString();
+        booking.BookingClientId = clientsID;
 
-        if (CheckBooking(newBooking))
+
+
+        if (CheckBooking(booking))
         {
+            // var result = await sweetAlertService.FireAsync(new SweetAlertOptions
             var result = await sweetAlertService.FireAsync(new SweetAlertOptions
                 {
                     Title = "Confirmation",
-                    Text = $"You are making an appointment for /r/n"  +
-                    $"{newBooking.BookingDate} at {newBooking.StartTime} to {newBooking.Duration}",
-                    Icon = SweetAlertIcon.Warning,
-                    ShowCancelButton = true,
-                    ConfirmButtonText = "Yes, I want to make this appointment",
-                    CancelButtonText = "No, I need to check my diary.",
-                    // Background = Color.Dark;
-                    
+                    // Text = $"You are making an appointment for /r/n"  +
+                    //                 $"{booking.BookingDate} at {booking.StartTime} to {booking.Duration}/r/n",
+                    // Icon = SweetAlertIcon.Warning,
+                    // ShowCancelButton = true,
+                    // ConfirmButtonText = "Yes, I want to make this appointment",
+                    // CancelButtonText = "No, I need to check my diary."
                 });
 
             var confirm = !string.IsNullOrEmpty(result.Value);
             if (confirm)
             {
-                BookingCalendar.NewBookings.Add(newBooking);
-                //     var x = await apiCalendar.CreateACalendarEvent(newBooking);
-                // }
-
-                var x = await apiCalendar.CreateACalendarEvent(newBooking);
-            }
+                BookingCalendar._newBookings.Add(booking);
+                var x = await apiCalendar.CreateACalendarEvent(booking);
+             }
         }
         else
         {
@@ -235,7 +216,8 @@
             // StateHasChanged();
         }
 
-        BookingCalendar.NewBookings.Add(newBooking);
+        BookingCalendar._newBookings.Add(booking);
+        _= UpdateCalendarView();
     }
 
     bool CheckBooking(CalendarEvents newBooking)
@@ -277,10 +259,23 @@
         return true;
     }
 
-    public async Task UpdateDay(List<CalendarEvents> _dayBookings)
+    void UpdateDuration(ChangeEventArgs e) // string duration)
     {
-        takenTimes = new();
-        timeStyles = new();
+        booking.Duration = e.Value.ToString();
+        var eValString = e.Value.ToString();
+        if(eValString == "1 hour")
+            booking.Duration = "01:00:00";
+        if (eValString == "45 mins")
+            booking.Duration = "00:45:00";
+        if (eValString == "30 mins")
+            booking.Duration = "00:30:00";
+    }
+
+    private void FillStartTimes()
+    {
+        StartTimes = [];
+        string startTime = "06:00";
+
         for (int i = 6; i < 21; i++)
         {
             for (int j = 0; j < 60; j += 15)
@@ -293,43 +288,22 @@
 
                 if (i < 10)
                 {
-                    takenTimes.Add($"0{i}:" + ii);
+                    StartTimes.Add($"{startTime}");
+                    startTime = $"0{i}:" + ii;
                 }
                 else
                 {
-                    takenTimes.Add($"{i}:" + ii);
-                }
-                timeStyles.Add("padding:1rem; width:10rem; color:#1e90ff");
-            }
-        }
-
-        foreach (var booking in _dayBookings)
-        {
-            var b = booking.StartTime.Substring(0, 5);
-
-            for (int i = 0; i < takenTimes.Count; i++)
-            {
-                if (b == takenTimes[i])
-                {
-                    var res = TimeSpan.Parse(booking.Duration);
-                    var res2 = TimeSpan.Parse(booking.StartTime);
-                    var res3 = res - res2;
-                    var res4 = res3.TotalMinutes;
-                    var res5 = res4 / 15;
-
-                    for (int t = 0; t < res5; t++)
-                    {
-                        timeStyles[i] = "padding:1rem; width:10rem; color:red";
-                        i++;
-                    }
+                    StartTimes.Add($"{startTime}");
+                    startTime = $"{i}:" + ii;
                 }
             }
         }
+    }
+    private async Task UpdateDayView(ChangeEventArgs e)
+    {
+        // _ = UpdateCalendarView();
+        BookingDate = DateTime.Parse(e.Value.ToString());
 
-        // this.appStateService.IsLoaded = false;
-        // // emulate an async loading event
-        // await Task.Delay(20);
-        // this.appStateService.IsLoaded = true;
+        DayTemplate.GetTodaysBookings(DateTime.Parse(e.Value.ToString()));
     }
 }
-

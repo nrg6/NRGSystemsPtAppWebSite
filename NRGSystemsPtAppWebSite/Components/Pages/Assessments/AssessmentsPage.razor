@@ -1,0 +1,460 @@
+﻿@page "/assessmentsPage"
+
+@using NRGSystemsPtAppWebSite.Models
+@using NRGSystemsPtAppWebSite.Services
+@using static MudBlazor.CategoryTypes
+@* @using C1.Chart;
+@using C1.Blazor.Chart; *@
+@using Microsoft.Maui.Graphics;
+@* @using Microsoft.Maui.Graphics.Encoders; *@
+
+@inject FunctionRestService apiClient
+@inject NavigationManager NavigaitonManager
+
+@rendermode InteractiveServer
+
+
+<h3> @clientsName ==> @programTitle </h3>
+
+@if (reportExerciseNames is null)
+{
+    <p><em>Loading ..........</em></p>
+}
+else
+{
+    <table class="table" style="color:#1e90ff; font-family:Cooper; font-size:large">
+        <thead>
+            <tr>
+                <th> NameOfExercise </th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var report in reportExerciseNames)
+            {
+                <tr>
+                    <td> @report </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+@if(XAxisLabels.Count < 1)
+{}
+else
+{
+    <table>
+        <thead>
+            <tr>
+                <th>
+                    <label>weights</label>
+                </th>
+                <th>
+                    <label>reps</label>
+                </th>
+                <th>
+                    <label>bodyweight</label>
+                </th>
+                <th>
+                    <label>time</label>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+@*                     <FlexChart  Class="WeightsChart"
+                                ChartType="C1.Chart.ChartType.Line"
+                               HeaderContent="Results Chart" 
+                               HeaderStyle="font-size:24px"
+                                ItemsSource="viewReports"
+                                BindingX="XAxisLabels" 
+                                Style="color:aliceblue; color:black">
+                                <SeriesCollection>
+                                    <Series Name="weights" Binding="Weights" />
+                                    <Series Name="RepsCompleted" Binding="RepsCompleted" />
+                                </SeriesCollection>
+                    </FlexChart> *@
+                    <MudChart id="WeightsChart" ChartType="ChartType.Line" ChartSeries="@WeightsSeries"          
+                            XAxisLabels="@XAxisLabels.ToArray()" Style="color:aliceblue; color:black" />
+                </td>
+                 <td>
+                    <MudChart id="RepsChart" ChartType="ChartType.Line" ChartSeries="@RepsSeries" XAxisLabels="@XAxisLabels.ToArray()" Width="100%" Height="350px" Style="color:aliceblue; color:black" />
+                </td>
+@*                <td>
+                    <MudChart id="bodyweightChart" ChartType="ChartType.Line" ChartSeries="@BodyWeightSeries" XAxisLabels="@XAxisLabels.ToArray()" Width="100%" Height="350px" Style="color:aliceblue; color:black" />
+                </td>
+ *@ @*                <td>
+                    <MudChart id="timeChart" ChartType="ChartType.Line" ChartSeries="@TimeSeries" XAxisLabels="@XAxisLabels.ToArray()" Width="100%" Height="350px" Style="color:aliceblue; color:black" />
+                </td> *@
+            </tr>
+        </tbody>
+    </table>
+
+<div>
+        <input type="button" class="io oi-flash" style="color:#1e90ff" @onclick="@RespondTo" value="Respond" />
+        @* <input type="button" class="io oi-flash" style="color:#1e90ff" @onclick="()=>RespondTo(report)" value="Respond" /> *@
+</div>
+}
+
+@code {
+    // public string[] XAxisLabels = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep" };
+    public List<string> XAxisLabels = [] ; 
+
+    List<ProgramReports> allReports = [];
+    List<ProgramReports> readReports = [];
+    List<ProgramReports> reportsForAssessment = [];
+    List<string> reportExerciseNames = [];
+    List<ProgramReports> viewReports { get; set; } = [];
+    string clientsName = "";
+    string programTitle = "";
+    int noOfReadReports;
+
+    // C1.Chart.ChartType[] chartTypes = new C1.Chart.ChartType[] { C1.Chart.ChartType.Column, C1.Chart.ChartType.Bar, C1.Chart.ChartType.Line, C1.Chart.ChartType.LineSymbols, C1.Chart.ChartType.Scatter, C1.Chart.ChartType.Area };
+    // C1.Chart.ChartType? chartType = C1.Chart.ChartType.Column;
+
+    public List<ChartSeries> WeightsSeries = new List<ChartSeries>(); 
+    public List<ChartSeries> RepsSeries = new List<ChartSeries>(); 
+    public List<ChartSeries> BodyWeightSeries = new List<ChartSeries>(); 
+    public List<ChartSeries> TimeSeries = new List<ChartSeries>(); 
+
+    public List<Assessments> AllAssessments = []; 
+
+    protected override async Task OnInitializedAsync()
+    {
+        allReports = await apiClient.GetAllReports();
+
+        foreach (var rep in allReports)
+        {
+            var dateSplit = rep.TimeOfSession.Split('-');
+            rep.TimeOfSession = dateSplit[0];
+            if (rep.Reported == 1)
+            {
+                readReports.Add(rep);
+            }
+        }
+
+        if(readReports.Count > 0)
+        {
+            var clientId = readReports[0].ClientId;
+            var progTitle = readReports[0].ProgramTitle;
+            clientsName = readReports[0].ClientName;
+            programTitle = readReports[0].ProgramTitle;
+
+            viewReports = [];
+            reportExerciseNames = [];
+
+            int seriesIndex = 0;
+
+            // Create a series for every exercise in the program
+            foreach (var rep in readReports)
+            {
+                if (rep.ProgramTitle == progTitle && rep.ClientId == clientId)
+                {
+                    if (!reportExerciseNames.Contains(rep.NameOfExercise))
+                    {
+                        WeightsSeries.Add(new ChartSeries() { Name = rep.NameOfExercise });
+                        RepsSeries.Add(new ChartSeries() { Name = rep.NameOfExercise });
+                        BodyWeightSeries.Add(new ChartSeries() { Name = rep.NameOfExercise });
+                        // TimeSeries.Add(new ChartSeries() { Name = rep.NameOfExercise });
+                        seriesIndex++;
+
+                        reportExerciseNames.Add(rep.NameOfExercise);
+                        XAxisLabels.Add(rep.TimeOfSession);
+
+                    }
+                    viewReports.Add(rep);
+                }
+                else
+                {
+                    Console.WriteLine(rep.ProgramTitle);
+                }
+            }
+
+            // Populate the weights chart series
+            foreach (var series in WeightsSeries)
+            {
+                List<double> doubleData = [];
+                foreach (var report in viewReports)
+                {
+                    if (series.Name == report.NameOfExercise) // WEIGHTS
+                    {
+                        if(report.Weights.Contains(","))
+                        {
+                            var splitter = report.Weights.Split(",");
+                            foreach(var splint in splitter)
+                            {
+                                doubleData.Add(double.Parse(splint));
+                            }
+                        }
+                        else
+                        {
+                            doubleData.Add(double.Parse(report.Weights));
+                        }
+                    }
+                }
+                series.Data = doubleData.ToArray();
+            }
+
+            // Populate the reps chart series
+            foreach (var series in RepsSeries)
+            {
+                List<double> doubleData = [];
+                foreach (var report in viewReports)
+                {
+                    if (series.Name == report.NameOfExercise) // REPS
+                    {
+                        if (report.RepsCompleted.Contains(","))
+                        {
+                            var splitter = report.RepsCompleted.Split(",");
+                            foreach (var splint in splitter)
+                            {
+                                doubleData.Add(double.Parse(splint));
+                            }
+                        }
+                        else
+                        {
+                            doubleData.Add(double.Parse(report.RepsCompleted));
+                        }
+                    }
+                    series.Data = doubleData.ToArray();
+                }
+            }
+
+            // Populate the bodyweight chart series
+            foreach (var series in BodyWeightSeries)
+            {
+                List<double> doubleData = [];
+                foreach (var report in viewReports)
+                {
+                    if (series.Name == report.NameOfExercise)
+                    {
+                        if (report.Weights.Contains(","))
+                        {
+                            var splitter = report.Weights.Split(",");
+                            foreach (var splint in splitter)
+                            {
+                                doubleData.Add(double.Parse(splint));
+                            }
+                        }
+                        else
+                        {
+                            doubleData.Add(double.Parse(report.Weights));
+                        }
+                    }
+                }
+                series.Data = doubleData.ToArray();
+            }
+
+            // foreach (var series in TimeSeries)
+            // {
+            //     List<double> doubleData = [];
+            //     foreach (var report in viewReports)
+            //     {
+            //         if (series.Name == report.NameOfExercise) // TRAINING TIME
+            //         {
+            //             if (report.TrainingTime.Contains(","))
+            //             {
+            //                 var splitter = report.TrainingTime.Split(",");
+            //                 foreach (var splint in splitter)
+            //                 {
+            //                     doubleData.Add(double.Parse(splint));
+            //                 }
+            //             }
+            //             else
+            //             {
+            //                 doubleData.Add(double.Parse(report.TrainingTime));
+            //             }
+            //         }
+            //     }
+            // }
+
+
+        }
+    }
+
+    protected async Task RespondTo() // string exName)
+    {
+        AllAssessments = [];
+        foreach (var exercise in reportExerciseNames)
+        {
+            var assessment = new Assessments();
+            assessment.ClientsId = viewReports[0].ClientId;
+            assessment.ClientsBodyWeight = viewReports[0].ClientId.ToString();
+            assessment.NameOfExercise = exercise;
+            assessment.ProgramTitle = viewReports[0].ProgramTitle;
+            assessment.ClientsBodyWeight = "50";
+            assessment.PtComments = "HELLO BITCHES!!";
+
+            List<string> weightsString = [];
+            List<string> weightsSetString = [];
+            List<string> repData = [];
+            List<string> repSetData = [];
+            List<string> trainingTimeData = [];
+            List<string> restingTimeData = [];
+
+            foreach (var report in viewReports)
+            {
+                if (report.NameOfExercise == exercise)
+                {
+                    // Populate the set weights
+                    if(report.WeightsSet.Contains(","))
+                    {
+                        var splitter = report.WeightsSet.Split(",");
+                        foreach(var splint in splitter)
+                        {
+                            weightsSetString.Add(splint);
+                            weightsSetString.Add(",");
+                        }
+                    }
+                    if (!report.Weights.Contains(","))
+                    {
+                        weightsSetString.Add(report.WeightsSet);
+                        weightsSetString.Add(",");
+                    }
+
+                    // Populate the achieved weights
+                    if(report.Weights.Contains(","))
+                    {
+                        var splitter = report.Weights.Split(",");
+                        foreach(var splint in splitter)
+                        {
+                            weightsString.Add(splint);
+                            weightsString.Add(",");
+                        }
+                    }
+                    if (!report.Weights.Contains(","))
+                    {
+                        weightsString.Add(report.Weights);
+                        weightsString.Add(",");
+                    }
+
+                    // Populate the set reps chart
+                    if (report.RepsSet.Contains(","))
+                    {
+                        var splitter = report.RepsSet.Split(",");
+                        foreach (var splint in splitter)
+                        {
+                            repSetData.Add(splint);
+                            repSetData.Add(",");
+                        }
+                    }
+                    if (!report.RepsSet.Contains(","))
+                    {
+                        repSetData.Add(report.RepsSet);
+                        repSetData.Add(",");
+                    }
+
+                    // Populate the reps chart
+                    if (report.RepsCompleted.Contains(","))
+                    {
+                        var splitter = report.RepsCompleted.Split(",");
+                        foreach (var splint in splitter)
+                        {
+                            repData.Add(splint);
+                            repData.Add(",");
+                        }
+                    }
+                    if (!report.RepsCompleted.Contains(","))
+                    {
+                        repData.Add(report.RepsCompleted);
+                        repData.Add(",");
+                    }
+
+                    // Populate the training time
+                    if (report.TrainingTime.Contains(","))
+                    {
+                        var splitter = report.TrainingTime.Split(",");
+                        foreach (var splint in splitter)
+                        {
+                            trainingTimeData.Add(splint);
+                            trainingTimeData.Add(",");
+                        }
+                    }
+                    if (!report.TrainingTime.Contains(","))
+                    {
+                        trainingTimeData.Add(report.TrainingTime);
+                        trainingTimeData.Add(",");
+                    }
+
+                    // Populate the resting time
+                    if (report.RestingTime.Contains(","))
+                    {
+                        var splitter = report.RestingTime.Split(",");
+                        foreach (var splint in splitter)
+                        {
+                            restingTimeData.Add(splint);
+                            restingTimeData.Add(",");
+                        }
+                    }
+                    if (!report.RestingTime.Contains(","))
+                    {
+                        restingTimeData.Add(report.RestingTime);
+                        restingTimeData.Add(",");
+                    }
+
+                }
+            }
+
+            // assessment.RepsSet = repSetData.ToArray().ToString();
+            // assessment.WeightsSets = weightsSetString.ToArray().ToString();
+            // assessment.RepsCompleted = repData.ToArray().ToString();
+            // assessment.WeightsAchieved = weightsString.ToArray().ToString();
+            // assessment.RestTime = restingTimeData.ToArray().ToString();
+            // assessment.TrainingTime = trainingTimeData.ToArray().ToString();
+
+            string runString = string.Empty;
+            foreach (var val in repSetData)
+            {
+                runString += val;
+                runString += ",";
+            }
+            assessment.RepsSet = runString;
+
+            runString = string.Empty;
+            foreach (var val in weightsSetString)
+            {
+                runString += val;
+                runString += ",";
+            }
+            assessment.WeightsSets = runString;
+
+
+            runString = string.Empty;
+            foreach (var val in repData)
+            {
+                runString += val;
+                runString += ",";
+            }
+            assessment.RepsCompleted = runString;
+
+            runString = string.Empty;
+            foreach (var val in weightsString)
+            {
+                runString += val;
+                runString += ",";
+            }
+            assessment.WeightsAchieved = runString;
+
+            runString = string.Empty;
+            foreach (var val in restingTimeData)
+            {
+                runString += val;
+                runString += ",";
+            }
+            assessment.RestTime = runString;
+
+            runString = string.Empty;
+            foreach (var val in trainingTimeData)
+            {
+                runString += val;
+                runString += ",";
+            }
+            assessment.TrainingTime = runString;
+            
+            AllAssessments.Add(assessment);
+        }
+    }
+}
+
+

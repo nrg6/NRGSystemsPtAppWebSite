@@ -23,7 +23,7 @@ else
         </td>
     </tr>
 
-    <table class="table" style="color:#1e90ff">
+    <table class="table" style="color:#1e90ff; font-family:Cooper; font-size:large">
         <thead>
             <tr>
                 <th> Id </th>
@@ -87,7 +87,8 @@ else
             }
         }
 
-        allReports = await apiClient.GetClientsReports(clientsID);
+        // allReports = await apiClient.GetClientsReports(clientsID);
+        allReports = await apiClient.GetAllReports();
 
         foreach (var rep in allReports)
         {
@@ -105,8 +106,26 @@ else
         noOfReadReports = readReports.Count;
         noOfUnreadReports = unreadReports.Count;
 
-        viewReports = unreadReports;
+        if (unreadReports.Count > 0)
+        {
+            var clientName = unreadReports[0].ClientName;
+            var sessionDate = unreadReports[0].TimeOfSession;
+            viewReports = [];
 
+            foreach(var rep in unreadReports)
+            {
+                if (rep.ClientName == clientName && rep.TimeOfSession == sessionDate)
+                {
+                    viewReports.Add(rep);
+                }
+            }
+        }
+        else
+        {
+            NavigaitonManager.NavigateTo("assessmentsPage");
+        }
+
+        
         reportIndex = 0;
         if (allReports.Count > 0)
         {

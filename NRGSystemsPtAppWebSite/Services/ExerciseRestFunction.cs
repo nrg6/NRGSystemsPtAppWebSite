@@ -1,6 +1,4 @@
 ﻿using NRGSystemsPtAppWebSite.Models;
-using System.Net.Http.Json;
-using System.Text.Json;
 
 namespace NRGSystemsPtAppWebSite.Services
 {

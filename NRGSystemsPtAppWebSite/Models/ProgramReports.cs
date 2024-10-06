@@ -40,6 +40,14 @@ namespace NRGSystemsPtAppWebSite.Models
         [MaxLength(50)]
         public string NameOfExercise { get; set; } = string.Empty;
 
+        [Column("weights_set")]
+        [MaxLength(50)]
+        public string WeightsSet { get; set; } = string.Empty;
+
+        [Column("reps_set")]
+        [MaxLength(25)]
+        public string RepsSet { get; set; } = string.Empty;
+        
         [Column("weights")]
         [MaxLength(50)]
         public string Weights { get; set; } = string.Empty;

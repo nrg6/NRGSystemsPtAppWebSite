@@ -1,0 +1,236 @@
+﻿@page "/assessmentCreate/{exName}"
+
+
+<h3>AssessmentCreate</h3>
+
+
+@using NRGSystemsPtAppWebSite.Models
+@using NRGSystemsPtAppWebSite.Services
+
+@inject FunctionRestService apiClient
+@inject NavigationManager NavigaitonManager
+
+@rendermode InteractiveServer
+
+
+@if (viewReports is null)
+{
+    <p><em>Loading ..........</em></p>
+}
+else
+{
+    <tr>
+        <td>
+@*             <input type="button" style="color:#1e90ff;padding:1rem; margin:1rem" class="io oi-flash" @onclick="@ViewUnreadReports" value="Only View Unread Reports" /> *@
+        </td>
+        <td>
+@*             <input type="button" style="color:#1e90ff; padding:1rem; margin:1rem" class="io oi-flash" @onclick="@ViewAllReports" value="View All Reports" /> *@
+        </td>
+    </tr>
+
+    <table class="table" style="color:#1e90ff; font-family:Cooper; font-size:large">
+        <thead>
+            <tr>
+                @* <th> @viewReports[0].NameOfExercise </th> *@
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var report in reportExerciseNames)
+            {
+                <tr>
+                    <td> @report </td>
+                    <td>
+                        <input type="button" class="io oi-flash" style="color:#1e90ff;padding:1rem; margin:1rem" @onclick="@CreateAssessment" value="Respond" />
+                    </td>
+@*                     <td>
+                        <a class="nav-link btn btn-primary" href="EditReport/@report.ReportId">
+                            <span class="oi oi-pencil" aria-hidden="true"> Respond </span>
+                        </a>
+                    </td> *@
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@* 
+@if (allReports is null)
+{
+    <p><em>Loading ..........</em></p>
+}
+else
+{
+    <tr>
+        <td>
+@*             <input type="button" style="color:#1e90ff;padding:1rem; margin:1rem" class="io oi-flash" @onclick="@ViewUnreadReports" value="Only View Unread Reports" /> *@
+@*         </td>
+        <td> *@
+@*             <input type="button" style="color:#1e90ff; padding:1rem; margin:1rem" class="io oi-flash" @onclick="@ViewAllReports" value="View All Reports" /> *@
+@*         </td>
+    </tr> *@
+
+    <table class="table" style="color:#1e90ff; font-family:Cooper; font-size:large">
+        <thead>
+            <tr>
+                <th> Id </th>
+                <th> Weights set </th>
+                <th> weights achieved </th>
+                <th> reps set </th>
+                <th> reps achieved </th>
+                <th> training time </th>
+                <th> rest time </th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var report in viewReports)
+            {
+                <tr>
+                    <td> @report.ReportId </td>
+                    <td> @report.WeightsSet </td>
+                    <td> @report.Weights </td>
+                    <td> @report.RepsSet</td>
+                    <td> @report.RepsCompleted </td>
+                    <td> @report.TrainingTime </td>
+                    <td> @report.RestingTime </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <input type="button" class="io oi-flash" style="color:#1e90ff;padding:1rem; margin:1rem" @onclick="@CreateAssessment" value="UPDATE ASSESSMENT" />
+
+<table class="table" style="color:#1e90ff; font-family:Cooper; font-size:large">
+    <thead>
+        <tr>
+            <th> weightsSetArray </th>
+            <th> weightsAchievedArray </th>
+            <th> repsSetArray </th>
+            <th> repsAchievedArray </th>
+            <th> trainingTimeArray </th>
+            <th> restTimeArray </th>
+            <th> trainingDateArray </th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var report in viewReports)
+        {
+            <tr>
+                <td> @weightsSetArray </td>
+                <td> @weightsAchievedArray </td>
+                <td> @repsSetArray </td>
+                <td> @repsAchievedArray</td>
+                <td> @trainingTimeArray </td>
+                <td> @restTimeArray </td>
+                <td> @trainingDateArray </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div>
+    <MudChart ChartType="ChartType.Line" ChartSeries="@Series" XAxisLabels="@XAxisLabels" Width="100%" Height="350px" Style="color:aliceblue; color:black" />
+</div>
+@code {
+    [Parameter]
+    public string exName { get; set; } = string.Empty;
+
+    public List<ChartSeries> Series = new List<ChartSeries>();
+    // {
+    //     new ChartSeries() { Name = "Floor Bench Press", Data = new double[] { 40, 20, 25, 27, 46, 60, 48, 80, 15 } },
+    //     new ChartSeries() { Name = "Bent Over Rows", Data = new double[] { 19, 24, 35, 13, 28, 15, 13, 16, 31 } },
+    //     new ChartSeries() { Name = "Curtsy Lunge", Data = new double[] { 8, 6, 11, 13, 4, 16, 10, 16, 18 } },
+    //     new ChartSeries() { Name = "Kettlebell Deadlift", Data = new double[] { 18, 16, 21, 23, 14, 26, 20, 26, 8 } },
+    //     new ChartSeries() { Name = "Single Arm Arnold Press Kettlebell", Data = new double[] { 45, 77, 33, 84, 43, 16, 13, 76, 68 } },
+    //     new ChartSeries() { Name = "Curl To Press", Data = new double[] { 9, 23, 34, 45, 56, 57, 67, 78, 89 } },
+    //     new ChartSeries() { Name = "Pullover Crunch", Data = new double[] { 2, 3, 4, 5, 7, 4, 10, 6, 8 } },
+    // };
+
+    public string[] XAxisLabels = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep" };
+
+    List<ProgramReports> allReports = [];
+    List<ProgramReports> readReports = [];
+    List<ProgramReports> reportsForAssessment = [];
+    List<string> reportExerciseNames = [];
+    List<ProgramReports> viewReports = [];
+    
+    string weightsSetArray = string.Empty;
+    string weightsAchievedArray = string.Empty;
+    string repsSetArray = string.Empty;
+    string repsAchievedArray = string.Empty;
+    string trainingTimeArray = string.Empty;
+    string restTimeArray = string.Empty;
+
+    string trainingDateArray = string.Empty;
+
+    int noOfReadReports;
+
+    protected override async Task OnInitializedAsync()
+    {
+        allReports = await apiClient.GetAllReports();
+
+        foreach (var rep in allReports)
+        {
+            var dateSplit = rep.TimeOfSession.Split('-');
+            rep.TimeOfSession = dateSplit[0];
+            if (rep.Reported == 1)
+            {
+                readReports.Add(rep);
+            }
+        }
+        noOfReadReports = readReports.Count;
+        if(readReports.Count > 0)
+        {
+            var clientId = readReports[0].ClientId;
+            var progTitle = readReports[0].ProgramTitle;
+            var ExerciseName = exName;
+
+            viewReports = [];
+            reportExerciseNames = [];
+
+            foreach (var rep in readReports)
+            {
+                if (rep.ProgramTitle == progTitle && 
+                    rep.ClientId == clientId)
+                {
+                    viewReports.Add(rep);
+                }
+                // rep.NameOfExercise == ExerciseName &&
+            }
+        }
+    }
+
+    protected void CreateAssessment()
+    {
+        weightsSetArray = string.Empty;
+        weightsAchievedArray = string.Empty;
+        repsSetArray = string.Empty;
+        repsAchievedArray = string.Empty;
+        trainingTimeArray = string.Empty;
+        restTimeArray = string.Empty;
+
+        foreach(var rep in viewReports)
+        {
+            weightsSetArray += rep.WeightsSet + ",";
+            weightsAchievedArray += rep.Weights + "," ;
+            repsSetArray += rep.RepsSet + ",";
+            repsAchievedArray += rep.RepsCompleted + ",";
+            trainingTimeArray += rep.TrainingTime + ",";
+            restTimeArray += rep.RestingTime + ",";
+
+            trainingDateArray += rep.TimeOfSession + ",";
+
+
+
+    //         new ChartSeries() { Name = "Floor Bench Press", Data = new double[] { 40, 20, 25, 27, 46, 60, 48, 80, 15 } },
+    // new ChartSeries() { Name = "Bent Over Rows", Data = new double[] { 19, 24, 35, 13, 28, 15, 13, 16, 31 } },
+    // new ChartSeries() { Name = "Curtsy Lunge", Data = new double[] { 8, 6, 11, 13, 4, 16, 10, 16, 18 } },
+    // new ChartSeries() { Name = "Kettlebell Deadlift", Data = new double[] { 18, 16, 21, 23, 14, 26, 20, 26, 8 } },
+    // new ChartSeries() { Name = "Single Arm Arnold Press Kettlebell", Data = new double[] { 45, 77, 33, 84, 43, 16, 13, 76, 68 } },
+    // new ChartSeries() { Name = "Curl To Press", Data = new double[] { 9, 23, 34, 45, 56, 57, 67, 78, 89 } },
+    // new ChartSeries() { Name = "Pullover Crunch", Data = new double[] { 2, 3, 4, 5, 7, 4, 10, 6, 8 } },
+        }
+    }
+}

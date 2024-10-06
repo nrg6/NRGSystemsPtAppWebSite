@@ -1,0 +1,45 @@
+﻿@using MudBlazor
+@using NRGSystemsPtAppWebSite.Handlers
+@using NRGSystemsPtAppWebSite.Models
+
+@* @inject AppStateService appStateService *@
+
+<table style="align-content:center">
+    @if ((@TakenTimesCount > 20) && (@TimeStylesCount > 20))
+    { 
+        @for(int i = 1; i < 8;i++)
+        {
+            <tr>
+            @for(int j = 1; j < 9; j++)
+            {
+                <td>
+                    <label class="ms-fontsize-24 ms-fontWeight-regular"
+                           style=@TimeStyles[TimeCounter]>@TakenTimes[TimeCounter]</label>
+                </td>
+                TimeCounter++;
+            }
+            </tr>
+        }
+        TimeCounter = 1;
+    } 
+</table>
+
+@code
+{
+    [Parameter]
+    public List<string> TakenTimes { get; set; } = new();
+    [Parameter]
+    public List<string> TimeStyles { get; set; } = new();
+    [Parameter]
+    public int TimeCounter { get; set; } = 1;
+    [Parameter]
+    public int TakenTimesCount { get; set; } = 1;
+    [Parameter]
+    public int TimeStylesCount { get; set; } = 1;
+
+    // protected override async Task OnInitializedAsync()
+    // {
+    // }
+}
+
+

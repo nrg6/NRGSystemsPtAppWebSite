@@ -1,0 +1,136 @@
+﻿p, body, td, input, select {
+    font-family: -apple-system,system-ui,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+    font-size: 14px;
+}
+
+body {
+    padding: 0px;
+    margin: 0px;
+    background-color: #ffffff;
+}
+
+a {
+    color: #1155a3;
+}
+
+.space {
+    margin: 10px 0px 10px 0px;
+}
+
+.header {
+    background: #003267;
+    background: linear-gradient(to right, #011329 0%,#00639e 44%,#011329 100%);
+    padding: 20px 10px;
+    color: white;
+    box-shadow: 0px 0px 10px 5px rgba(0,0,0,0.75);
+}
+
+.header a {
+    color: white;
+}
+
+.header h1 a {
+    text-decoration: none;
+}
+
+.header h1 {
+    padding: 0px;
+    margin: 0px;
+}
+
+.main {
+    padding: 10px;
+    margin-top: 10px;
+}
+
+
+/* toolbar */
+
+.toolbar {
+    background-color: #F9F9F9;
+    border-radius: 8px;
+    padding: 10px 20px;
+    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    border: 1px solid #E0E0E0;
+}
+
+.toolbar a,
+.toolbar button {
+    background-color: #E0E0E0;
+    color: #333;
+    text-decoration: none;
+    margin: 0 10px;
+    padding: 5px 15px;
+    border-radius: 15px;
+    transition: all 0.3s;
+    border: none; 
+    cursor: pointer;
+    outline: none;
+}
+
+.toolbar a:hover,
+.toolbar button:hover {
+    background-color: #007BFF;
+    color: #FFF;
+}
+
+
+.toolbar button {
+    background-color: #666;
+    color: #FFF;
+    padding: 7px 17px;
+}
+
+.toolbar select {
+    border: 1px solid #E0E0E0;
+    background-color: #FFF;
+    padding: 5px 15px;
+    border-radius: 15px;
+    margin: 0 10px;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.3s;
+}
+
+.toolbar select:focus {
+    border-color: #007BFF;
+}
+
+.toolbar select option {
+    padding: 5px 10px;
+}
+
+
+.toolbar label {
+    margin: 0 10px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.toolbar input[type="radio"] {
+    margin-right: 5px;
+    margin-bottom: 4px;
+}
+
+.toolbar input[type="checkbox"] {
+    margin-right: 5px;
+}
+
+.toolbar input[type="text"] {
+    border: 1px solid #E0E0E0;
+    padding: 5px 10px;
+    border-radius: 15px;
+    outline: none;
+    transition: border-color 0.3s;
+    margin: 0 10px;
+}
+
+.toolbar input[type="text"]:focus {
+    border-color: #007BFF;
+}

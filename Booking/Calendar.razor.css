@@ -1,0 +1,9 @@
+﻿.selected {
+    background-color: #ff00f0; /* light gray */
+    border-color: #c00; /* light gray */
+}
+
+/* Optional hover style */
+td:hover {
+    background-color:darkblue; /* light gray */
+}

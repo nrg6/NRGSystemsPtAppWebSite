@@ -1,6 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
 
 namespace NRGSystemsPtAppWebSite.Models;
 public class Assessments
@@ -22,27 +21,27 @@ public class Assessments
     public string NameOfExercise { get; set; } = string.Empty;
 
     [Column("training_time")]
-    [MaxLength(50)]
+    [MaxLength(200)]
     public string TrainingTime { get; set; } = string.Empty;
 
     [Column("rest_time")]
-    [MaxLength(50)]
+    [MaxLength(200)]
     public string RestTime { get; set; } = string.Empty;
 
     [Column("weights_set")]
-    [MaxLength(25)]
+    [MaxLength(100)]
     public string WeightsSets { get; set; } = string.Empty;
 
     [Column("weights_achieved")]
-    [MaxLength(25)]
+    [MaxLength(100)]
     public string WeightsAchieved { get; set; } = string.Empty;
 
     [Column("reps_set")]
-    [MaxLength(25)]
+    [MaxLength(100)]
     public string RepsSet { get; set; } = string.Empty;
 
     [Column("reps_completed")]
-    [MaxLength(25)]
+    [MaxLength(100)]
     public string RepsCompleted { get; set; } = string.Empty;
 
     [Column("results_image")]

@@ -7,6 +7,117 @@
 
 @rendermode InteractiveServer
 
+<table>
+    <thead>
+        <tr >
+            <th id="exerciseImage"
+                style="width:auto">
+                <img src="@CurrentProgram.ImageGifLocation" />
+            </th>
+            <th id="targetWeights"
+                style ="width:fit-content ">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>
+                                <label style="font-size:x-large" class="control-label">TARGET WEIGHTS</label>
+                            </th>
+                        </tr>    
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="text-align:center">
+                                <label style="font-size:x-large" for="ClientsNameLabel" class="control-label">@CurrentProgram.Weights</label>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </th>
+            <th>
+                <label style="width:5rem">   </label>
+            </th>
+            <th id="achievedWeights"
+                style="width:fit-content ">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>
+                                <label style="font-size:x-large" class="control-label">ACHIEVED WEIGHTS</label>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="text-align:center">
+                                <input style="font-size:x-large" for="ClientsNameLabel" class="control-label" @bind="@CurrentReport.RepsCompleted" />
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </th>
+            <th>
+                <label style="width:5rem">   </label>
+            </th>
+            <th id="targetReps"
+                style="width:fit-content; padding:inherit; margin:auto">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>
+                                <label style="font-size:x-large" class="control-label">TARGET Reps</label>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="text-align:center">
+                                <label style="font-size:x-large" for="ClientsNameLabel" class="control-label">@CurrentProgram.Repetitions</label>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </th>
+            <th>
+                <label style="width:5rem">   </label>
+            </th>
+            <th id="achievedReps"
+                style="width:fit-content">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>
+                                <label style="font-size:x-large" class="control-label">ACHIEVED REPS</label>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="text-align:center">
+                                <input style="font-size:x-large" for="ClientsNameLabel" class="control-label" @bind="@CurrentReport.RepsCompleted" />
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+                <label style="font-size:large" class="control-label">Clients comments</label>
+            </td>
+            <td style="column-span:all">
+                <input style="width:stretch; font-size:x-large" @bind="@CurrentReport.ClientsComments" />
+            </td>
+
+        </tr>
+    </tbody>
+
+
+</table>
+
+
+@* 
 <table style="color: #1e90ff; font-family:Cooper">
     <thead>
         <tr>
@@ -14,16 +125,16 @@
                 <img src="@CurrentProgram.ImageGifLocation" />
             </th>
             <th>
-                <label style="font-size:small" class="control-label">TARGET WEIGHTS</label>
+                <label style="font-size:x-large" class="control-label">TARGET WEIGHTS</label>
             </th>
             <th>
-                <label style="font-size:small" class="control-label">TARGET REPS</label>
+                <label style="font-size:x-large" class="control-label">TARGET REPS</label>
             </th>
             <th>
-                <label style="font-size:small" class="control-label">ACHIEVED WEIGHTS</label>
+                <label style="font-size:x-large" class="control-label">ACHIEVED WEIGHTS</label>
             </th>
             <th>
-                <label style="font-size:small" class="control-label">ACHIEVED REPS</label>
+                <label style="font-size:x-large" class="control-label">ACHIEVED REPS</label>
             </th>
          </tr>
     </thead>
@@ -53,7 +164,7 @@
         </tr>
     </tbody>
 </table>
-
+ *@
 <table class="table" style="color: #1e90ff; font-family:Cooper">
     <thead>
         <tr>
@@ -199,6 +310,8 @@
         CurrentReport.ClientName = ex.ClientName;
         CurrentReport.ProgramTitle = ex.ProgramTitle;
         CurrentReport.DateIssued = ex.DateIssued;
+        CurrentReport.WeightsSet = ex.Weights;
+        CurrentReport.RepsSet = ex.Repetitions;
         CurrentReport.Reported = 0;
         CurrentReport.TimeOfSession = StartTime.ToString();
         CurrentReport.TrainingTime = IntermediateTime.ToString();

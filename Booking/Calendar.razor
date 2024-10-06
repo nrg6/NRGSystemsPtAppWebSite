@@ -1,0 +1,226 @@
+﻿@using NRGSystemsPtAppWebSite.Models
+
+@rendermode InteractiveServer
+@* 
+<div class="calendar-table">
+    <div class="row">
+        <div class="col-sm-12 col-lg-2">
+            <select name=" " id=" " class="fluent-input" @onchange="SelectYear">
+                @for (int i = 2024; i < 2027; i++)
+                {
+                    <option>@i</option>
+                }
+            </select>
+        </div>
+        <div class="col-sm-12 col-lg-2">
+            <select name=" " id=" " class="fluent-input" @onchange="SelectMonth">
+
+                @for(int i = int.Parse(thisMonth) - 1; i < 12; i++)
+                {
+                    string monthy = Months[i];
+                    <option value="@i">@Months[i]</option>
+                }
+            </select>
+        </div>
+    </div>
+    <table class="calendar">
+        <thead>
+            <tr>
+                <td style="padding-left:2rem;padding-right:2rem">Sun</td>
+                <td style="padding-left:2rem;padding-right:2rem">Mon</td>
+                <td style="padding-left:2rem;padding-right:2rem">Tue</td>
+                <td style="padding-left:2rem;padding-right:2rem">Wed</td>
+                <td style="padding-left:2rem;padding-right:2rem">Thu</td>
+                <td style="padding-left:2rem;padding-right:2rem">Fri</td>
+                <td style="padding-left:2rem;padding-right:2rem">Sat</td>
+            </tr>
+        </thead>
+        <tbody class="calendar-day-view" > 
+            @for (int b = 0; b < RowsCount; b++)
+            {
+                <tr style="padding:3rem">
+                    @foreach (var item in Days.Skip(b * 7).Take(7))
+                    {
+                        <td style="color:white; padding:3rem">
+                            <div class="row">
+                                <div class="col-sm-12 col-md-12 col-lg-9" style="color:blue">
+                                    @{
+                                        string currentDayClass = item.Date == DateTime.Now.Date ? "current-day" : "";
+                                    }
+                                    @if ((item.DayNumber == DaySelection) &&  (!item.IsEmpty))
+                                    {
+                                        <div class="shadow-lg @currentDayClass" style="color:aliceblue">
+                                            <h3 class="ms-fontsize-24 ms-fontWeight-regular" 
+                                                    @onclick="@(e => DaySelected(item))">@item.DayNumber</h3>
+                                        </div>
+                                    }
+                                    @if ((item.DayNumber != DaySelection) && (!item.IsEmpty))
+                                    {
+                                        <div class="shadow-lg @currentDayClass" style="color:red">
+                                            <h3 class="ms-fontsize-24 ms-fontWeight-regular" @onclick="@(e => DaySelected(item))">@item.DayNumber</h3>
+                                        </div>
+                                    }
+                                    @if ((item.DayNumber == DaySelection) && (item.IsEmpty))
+                                    {
+                                        <div class="shadow-lg @currentDayClass" style="color:green">
+                                            <h3 class="ms-fontsize-24 ms-fontWeight-regular" @onclick="@(e => DaySelected(item))">@item.DayNumber</h3>
+                                        </div>
+                                    }
+                                    @if ((item.DayNumber != DaySelection) && (item.IsEmpty))
+                                    {
+                                        <div class="shadow-lg @currentDayClass" style="color:gold">
+                                            <h3 class="ms-fontsize-24 ms-fontWeight-regular" @onclick="@(e => DaySelected(item))">@item.DayNumber</h3>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+
+@code
+{
+    [Parameter]
+    public EventCallback<string> DateSelectionMade { get; set; }
+
+    [Parameter]
+    public Dictionary<int, string> CalendarMonths { get; set; }
+
+    [Parameter]
+    public int RowsCount { get; set; } = 0;
+    [Parameter]
+    public string thisMonth { get; set; } = DateTime.UtcNow.Date.Month.ToString();
+    [Parameter]
+    public bool dontShow { get; set; } = false;
+    [Parameter]
+    public int monthCounter { get; set; } = 0;
+
+    [Parameter]
+    public List<CalendarBookings> Days { get; set; } = [];
+    [Parameter]
+    public List<CalendarEvents> CalEvents { get; set; } = [];
+
+    [Parameter]
+    public int Year { get; set; } = DateTime.Now.Year;
+    [Parameter]
+    public int Month { get; set; } = DateTime.Now.Month;
+
+    [Parameter]
+    public string DateSelected { get; set; }
+    [Parameter]
+    public int DaySelection { get; set; }
+
+    [Parameter]
+    public static string[] Months { get; set; } = new string[] {"January", "Febuary", "March", "April",
+                    "May", "June", "July", "August", "September", "October", "November", "December"};
+
+    protected override async Task OnInitializedAsync()
+    {
+        Year = DateTime.Now.Year;
+        Month = DateTime.Now.Month;
+        UpdateCalendar();
+    }
+
+    void SelectYear(ChangeEventArgs e)
+    {
+        Year = Convert.ToInt32(e.Value.ToString());
+        string thisYear = DateTime.Now.Year.ToString();
+        string sYear = Year.ToString();
+
+        if (sYear != thisYear)
+        {
+            thisMonth = "1";
+        }
+        else
+        {
+            thisMonth = DateTime.UtcNow.Date.Month.ToString();
+        }
+
+        UpdateCalendar();
+    }
+
+    void SelectMonth(ChangeEventArgs e)
+    {
+        Month = Convert.ToInt32(e.Value.ToString());
+        UpdateCalendar();
+    }
+
+    public void UpdateCalendar()
+    {
+        Days = new List<CalendarBookings>();
+        var firstDayDate = new DateTime(Year, Month, 1);
+        int weekDayNumber = (int)firstDayDate.DayOfWeek;
+        int numberOfEmptyDays = 0;
+
+        if (weekDayNumber == 7)
+        {
+            numberOfEmptyDays = 0;
+        }
+        else
+        {
+            numberOfEmptyDays = weekDayNumber;
+        }
+        for (int i = 0; i < numberOfEmptyDays; i++)
+        {
+            Days.Add(new CalendarBookings
+                {
+                    DayNumber = 0,
+                    IsEmpty = true
+                });
+        }
+
+        int numberofdaysinmonth = DateTime.DaysInMonth(Year, Month);
+
+        for (int i = 0; i < numberofdaysinmonth; i++)
+        {
+            Days.Add(new CalendarBookings
+                {
+                    DayNumber = i + 1,
+                    IsEmpty = false,
+                    Date = new DateTime(Year, Month, i + 1)
+                });
+        }
+
+        int remaining = Days.Count % 7;
+        if (remaining == 0)
+            RowsCount = Days.Count / 7;
+        else
+            RowsCount = Convert.ToInt32(Days.Count / 7) + 1;
+
+        StateHasChanged();
+
+        Console.WriteLine($"Total Rows: {RowsCount} | number of Empty Days {numberOfEmptyDays} | Month days{numberofdaysinmonth}");
+
+    }
+
+    protected async Task DaySelected(CalendarBookings e)
+    {
+        // var table = .GetElementById('calendar-table');
+        DaySelection = e.DayNumber;
+
+        // BookingCalendar.DaySelected(e);
+        var splitter = e.Date.ToString();
+        var splitter2 = splitter.Split(" ");
+        DateSelected = splitter2[0];
+        // BookingCalendar.UpdateUI(DateSelected);
+
+        foreach (var ev in CalEvents)
+        {
+            var splitter3 = ev.BookingDate.Split(" ");
+            
+            if (DateSelected == splitter3[0])
+            {
+                
+            }
+        }
+
+        await DateSelectionMade.InvokeAsync(DateSelected);
+        UpdateCalendar();
+    }
+}
+ *@

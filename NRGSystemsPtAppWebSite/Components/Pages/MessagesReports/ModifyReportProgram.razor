@@ -11,7 +11,38 @@
 
 <h5 style="color:#1e90ff">Update values for the next workout</h5>
 
-<hr />
+<table style="width:fit-content; align-content:center; column-fill:initial">
+    <thead >
+        <tr>
+            <th>
+                <label for="Weights" class="control-label">Weights</label>
+            </th>
+            <th>
+                <label for="Reps" class="control-label">Reps</label>
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td style ="width:fit-content; align-content:center">
+                <input form="Weights" class="form-control" @bind="@program.Weights" />
+            </td>
+            <td>
+                <input form="Reps" class="form-control" @bind="@program.Repetitions" />
+            </td>
+        </tr>
+    </tbody>
+</table>
+<div>
+    <div>
+        <label for="PtsComments" class="control-label">Set comment for the client</label>
+    </div>
+    <div>
+        <input form="PtsComments" class="form-control" @bind="@program.PtComments" />
+    </div>
+</div>
+
+@* 
 <form style="color:#1e90ff">
     <div class="row">
         <div class="col-md-8">
@@ -31,30 +62,30 @@
         </div>
     </div>
 </form>
+ *@
+<div class="row">
+    <div class="col-md-4">
+        <div class="form-group">
+            <input type="button" style="margin:1rem" class="btn btn-primary" @onclick="@UpdateProgram" value="Update this program exercise" />
+        </div>
+    </div>
+</div>
 
 <div class="row">
     <div class="col-md-4">
         <div class="form-group">
-            <input type="button" style="color:#1e90ff; margin:1rem" class="btn btn-primary" @onclick="@UpdateProgram" value="Submit" />
-        </div>
-    </div>
-</div>
-@* 
-<div class="row">
-    <div class="col-md-4">
-        <div class="form-group">
-            <input type="button" class="btn btn-primary" @onclick="@AddNewExercise" value="Add Another Exercise" />
+            <input type="button" style="margin:1rem" class="btn btn-primary" @onclick="@AddNewExercise" value="Add Another Exercise" />
         </div>
     </div>
 </div>
 <div class="row">
     <div class="col-md-4">
         <div class="form-group">
-            <input type="button" class="io oi-flash" @onclick="@CreateNewProgram" value="Save Program" />
+            <input type="button" style="margin:1rem" class="btn btn-primary" @onclick="@CreateNewProgram" value="Create New Program" />
         </div>
     </div>
 </div>
- *@
+
 @code {
     [Parameter]
     public List<string> allClients { get; set; } = new();
@@ -68,6 +99,9 @@
     public string NameOfTheProgram { get; set; } = string.Empty;
     [Parameter]
     public ClientsProgram program { get; set; } = new();
+
+    [Parameter]
+    public int reportId { get; set; } = new();
 
     [Parameter]
     public EventCallback SelectNewExercise { get; set; } = new();
@@ -103,7 +137,26 @@
 
     protected async Task UpdateProgram()
     {
-        
+        var newProg = new ClientsProgram();
+        newProg.ProgramId = program.ProgramId;
+        newProg.ClientId = program.ClientId;
+        newProg.ClientName = program.ClientName;
+        newProg.ProgramTitle = program.ProgramTitle;
+        newProg.DateIssued = program.DateIssued;
+        newProg.NumberOfVisits = program.NumberOfVisits;
+        newProg.TimesProgramUsed = program.TimesProgramUsed + 1;
+        newProg.NameOfExercise = program.NameOfExercise;
+        newProg.ImageGifLocation = program.ImageGifLocation;
+        newProg.Weights = program.Weights;
+        newProg.Repetitions = program.Repetitions;
+        newProg.PtComments = program.PtComments;
+
+        await Task.Run(() => apiClient.UpdateClientsProgram(newProg));
+        var a = await Task.Run(() => apiClient.MarkReportAsReadAsync(reportId));
+        if(a)
+        {
+            NavigaitonManager.NavigateTo("report");
+        }
     }
 
     protected async Task AddNewExercise()

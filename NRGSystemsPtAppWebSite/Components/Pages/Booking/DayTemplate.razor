@@ -2,44 +2,159 @@
 @using NRGSystemsPtAppWebSite.Handlers
 @using NRGSystemsPtAppWebSite.Models
 
-@inject AppStateService appStateService
+@* @inject AppStateService appStateService *@
 
 <table style="align-content:center">
-    @if ((@TakenTimesCount > 20) && (@TimeStylesCount > 20))
+    @if ((@takenTimes.Count > 20) && (@timeStyles.Count > 20))
     { 
-        @for(int i = 1; i < 8;i++)
+        @for(int i = 1; i < 15;i++)
         {
             <tr>
-            @for(int j = 1; j < 9; j++)
+            @for(int j = 1; j < 5; j++)
             {
                 <td>
-                    <label class="ms-fontsize-24 ms-fontWeight-regular"
-                           style=@TimeStyles[TimeCounter]>@TakenTimes[TimeCounter]</label>
+@*                     <label class="ms-fontsize-24 ms-fontWeight-regular"
+                           style=@timeStyles[timeCounter]>@takenTimes[timeCounter]</label>
+ *@                    <button class="btn-danger ms-fontsize-24 ms-fontWeight-regular"
+                           style=@timeStyles[timeCounter]>@takenTimes[timeCounter]</button>
                 </td>
-                TimeCounter++;
+                timeCounter++;
             }
             </tr>
         }
-        TimeCounter = 1;
+        timeCounter = 1;
     } 
 </table>
 
 @code
 {
+    // [Parameter]
+    // public List<string> TakenTimes { get; set; } = new();
+    // [Parameter]
+    // public List<string> TimeStyles { get; set; } = new();
+    // [Parameter]
+    // public int TimeCounter { get; set; } = 1;
+    // [Parameter]
+    // public int TakenTimesCount { get; set; } = 1;
+    // [Parameter]
+    // public int TimeStylesCount { get; set; } = 1;
+
     [Parameter]
-    public List<string> TakenTimes { get; set; } = new();
+    public List<CalendarEvents> NewBookings { get; set; } = new();
     [Parameter]
-    public List<string> TimeStyles { get; set; } = new();
+    public static List<CalendarEvents> ValidBookings { get; set; } = new();
     [Parameter]
-    public int TimeCounter { get; set; } = 1;
-    [Parameter]
-    public int TakenTimesCount { get; set; } = 1;
-    [Parameter]
-    public int TimeStylesCount { get; set; } = 1;
+    public static List<CalendarEvents> TodaysBookings { get; set; } = new();
+
+    static List<string> takenTimes = new();
+    static List<string> timeStyles = new();
+
+    static int timeCounter = 0;
+
 
     // protected override async Task OnInitializedAsync()
     // {
-    // }
-}
 
+    // }
+
+    public static List<CalendarEvents> CheckNewBookings(List<CalendarEvents> newBooks)
+    {
+        ValidBookings = [];
+        foreach (var booking in newBooks)
+        {
+            if(DateTime.Parse(booking.BookingDate).Date >= DateTime.Now.Date)
+            {
+                ValidBookings.Add(booking);
+            }
+        }
+        List<CalendarEvents> todaysBookings = GetTodaysBookings(DateTime.Now.Date); // ValidBookings);
+        return ValidBookings;
+    }
+
+    // public static async Task UpdateDayView(DateTime dayToCheck)
+    // {
+    //     foreach(var booking in ValidBookings)
+    //     {
+    //         if(booking.BookingDate == dayToCheck.ToString())
+    //         {
+                
+    //         }
+    //     }
+    // }
+
+    public static async Task UpdateDay(List<CalendarEvents> _dayBookings)
+    {
+        takenTimes = new();
+        timeStyles = new();
+        string lastTime = "06:00";
+
+        for (int i = 6; i < 21; i++)
+        {
+            for (int j = 0; j < 60; j += 15)
+            {
+                string ii = j.ToString();
+                if (j == 0)
+                {
+                    ii = "00";
+                }
+
+                if (i < 10)
+                {
+                    takenTimes.Add($"{lastTime} -> 0{i}:" + ii);
+                    lastTime = $"0{i}:" + ii;
+                }
+                else
+                {
+                    takenTimes.Add($"{lastTime} -> {i}:" + ii);
+                    lastTime = $"{i}:" + ii;
+                }
+                timeStyles.Add("padding:1rem; width:10rem; background-color:#1e90ff");
+            }
+        }
+
+        foreach (var booking in _dayBookings)
+        {
+            var b = booking.StartTime.Substring(0, 5);
+
+            for (int i = 0; i < takenTimes.Count; i++)
+            {
+                var ttSplit = takenTimes[i].Split("-");
+                var csl = ttSplit[0].Replace(" ", "");
+
+                if (b == csl)
+                {
+                    var res = TimeSpan.Parse(booking.Duration);
+                    // var res2 = TimeSpan.Parse(booking.StartTime);
+                    // var res3 = res - res2;
+                    var res4 = res.TotalMinutes;
+                    var res5 = res4 / 15;
+
+                    for (int t = 0; t < res5; t++)
+                    {
+                        timeStyles[i] = "padding:1rem; width:10rem; background-color:red";
+                        i++;
+                    }
+                }
+            }
+        }
+    }
+
+    // public static List<CalendarEvents> GetTodaysBookings(List<CalendarEvents> _sortBookings)
+    public static List<CalendarEvents> GetTodaysBookings(DateTime dateToGet)
+    {
+        List<CalendarEvents> sortedBookings = new List<CalendarEvents>();
+        TodaysBookings = [];
+
+        foreach(var book in ValidBookings)
+        {
+            if(DateTime.Parse(book.BookingDate).Date == dateToGet)
+            {
+                TodaysBookings.Add(book);
+            }
+        }
+
+        _ = UpdateDay(TodaysBookings);
+    return sortedBookings;
+    }
+}
 

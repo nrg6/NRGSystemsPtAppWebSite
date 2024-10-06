@@ -74,8 +74,8 @@ namespace NRGSystemsPtAppWebSite.Services
             var calendarEvents = new List<CalendarEvents>();
             try
             {
-                //var iffycalendarEvents = await _functionClient.GetFromJsonAsync<List<NewCalendarEvents>>("api/GetAllCalendarEvent");
-                var iffycalendarEvents = await _localClient.GetFromJsonAsync<List<NewCalendarEvents>>("api/GetAllCalendarEvent");
+                var iffycalendarEvents = await _functionClient.GetFromJsonAsync<List<NewCalendarEvents>>("api/GetAllCalendarEvent");
+               // var iffycalendarEvents = await _localClient.GetFromJsonAsync<List<NewCalendarEvents>>("api/GetAllCalendarEvent");
 
                 foreach (var ifs in iffycalendarEvents)
                 {
@@ -105,7 +105,8 @@ namespace NRGSystemsPtAppWebSite.Services
         {
             try
             {
-                return await _localClient.GetFromJsonAsync<CalendarEvents>(
+                //return await _localClient.GetFromJsonAsync<CalendarEvents>(
+                return await _functionClient.GetFromJsonAsync<CalendarEvents>(
                     $"api/GetACalendarEvent?BookingDate={bookingDate}");
             }
             catch (Exception ex)
@@ -119,7 +120,8 @@ namespace NRGSystemsPtAppWebSite.Services
         {
             try
             {
-                await _localClient.GetFromJsonAsync<string>(
+                //await _localClient.GetFromJsonAsync<string>(
+                await _functionClient.GetFromJsonAsync<string>(
                     $"api/DeleteACalendarEvent?CalendarEventId={CalendarEventId}");
             }
             catch (Exception ex)

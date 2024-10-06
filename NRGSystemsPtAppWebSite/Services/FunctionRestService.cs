@@ -152,30 +152,33 @@ namespace NRGSystemsPtAppWebSite.Services
             return programs;
         }
 
-        public Task<bool> UpdateClientsProgram(ClientsProgram completedProgram)
+        public async Task<bool> UpdateClientsProgram(ClientsProgram completedProgram)
         {
-            //Uri uri = new Uri(string.Format(Constants.RestUrl, string.Empty));
-
             try
             {
-                //string json = JsonSerializer.Serialize<ClientsProgram>(completedProgram, _serializerOptions);
-                //StringContent content = new StringContent(json, Encoding.UTF8, "application/json");
+                var newMessages = await _functionClient.GetFromJsonAsync<bool>(
+               // var newMessages = await _localClient.GetFromJsonAsync<bool>(
+                    $"api/UpdateProgram?" +
+                    $"program_id={completedProgram.ProgramId}&" +
+                    $"client_id={completedProgram.ClientId}&" +
+                    $"clientsName={completedProgram.ClientName}&" +
+                    $"program_title={completedProgram.ProgramTitle}&" +
+                    $"date_issued={completedProgram.DateIssued}&" +
+                    $"number_of_visits={completedProgram.NumberOfVisits}&" +
+                    $"program_used={completedProgram.TimesProgramUsed}&" +
+                    $"exercise_name={completedProgram.NameOfExercise}&" +
+                    $"image_location={completedProgram.ImageGifLocation}&" +
+                    $"weights={completedProgram.Weights}&" +
+                    $"reps={completedProgram.Repetitions}&" +
+                    $"pt_comments={completedProgram.PtComments}");
 
-                //HttpResponseMessage response;
-
-                //response = await _client.PutAsync(uri, content);
-
-                //if (response.IsSuccessStatusCode)
-                //{
-                //    Debug.WriteLine(@"\tTodoItem successfully saved.");
-                //    return true;
-                //}
+                return true;
             }
             catch (Exception ex)
             {
                 Console.WriteLine(@"\tERROR {0}", ex.Message);
             }
-            return Task.FromResult(false);
+            return false; // Task.FromResult(false);
         }
 
         public async Task<List<ClientsProgram>> GetAllPrograms()
@@ -259,8 +262,8 @@ namespace NRGSystemsPtAppWebSite.Services
             var programs = new List<ClientsProgram>();
             try
             {
-                //programs = await _functionClient.GetFromJsonAsync<List<ClientsProgram>>(
-                programs = await _localClient.GetFromJsonAsync<List<ClientsProgram>>(
+                programs = await _functionClient.GetFromJsonAsync<List<ClientsProgram>>(
+              //  programs = await _localClient.GetFromJsonAsync<List<ClientsProgram>>(
                 $"api/GetAllProgramsById?clientsId={clientsId}");
             }
             catch (Exception ex)
@@ -341,6 +344,8 @@ namespace NRGSystemsPtAppWebSite.Services
                     $"ProgramTitle={report.ProgramTitle}&" +
                     $"DateIssued={report.DateIssued}&" +
                     $"NameOfExercise={report.NameOfExercise}&" +
+                    $"weights_set={report.WeightsSet}&" +
+                    $"reps_set={report.RepsSet}&" +
                     $"Weights={report.Weights}&" +
                     $"RepsCompleted={report.RepsCompleted}&" +
                     $"TrainingTime={report.TrainingTime}&" +
@@ -349,28 +354,29 @@ namespace NRGSystemsPtAppWebSite.Services
 
             try
             {                
-                //await _localClient.GetFromJsonAsync<ProgramReports>(command);
                 //var a = await _localClient.GetFromJsonAsync<ProgramReports>(command);
                 var a = await _functionClient.GetAsync(command);
-                //var response = await _functionClient.GetFromJsonAsync<ProgramReports>(command);
-                //$"api/CreateReport?Reported={report.Reported}&" +
-                //$"TimeOfSession={report.TimeOfSession}&" +
-                //$"ClientId={report.ClientId}&" +
-                //$"ClientName={report.ClientName}&" +
-                //$"ProgramId={report.ProgramId}&" +
-                //$"DateIssued={report.DateIssued}&" +
-                //$"NameOfExercise={report.NameOfExercise}&" +
-                //$"Weights={report.Weights}&" +
-                //$"RepsCompleted={report.RepsCompleted}&" +
-                //$"TrainingTime={report.TrainingTime}&" +
-                //$"RestingTime={report.RestingTime}&" +
-                //$"ClientsComments={report.ClientsComments}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(@"\tERROR {0}", ex.Message);
+            }
 
-                //if (response is not null)
-                //{
-                //    Console.WriteLine(@"\tReport successfully saved.");
-                //    return true;
-                //}
+            return false;
+        }
+        
+        public async Task<bool> MarkReportAsReadAsync(int reportId)
+        {
+            string command = $"api/MarkReportRead?" +
+                    $"updatedProgramId={reportId}";
+
+            try
+            {                
+                //var a = await _localClient.GetAsync(command);
+                var a = await _functionClient.GetAsync(command);
+                if (a.IsSuccessStatusCode)
+                    return true;
+                //var a = await _functionClient.GetAsync(command);
             }
             catch (Exception ex)
             {
@@ -381,10 +387,11 @@ namespace NRGSystemsPtAppWebSite.Services
         }
 
         public async Task<List<ProgramReports>> GetClientsReports(int clientsId)
-        {
+        {   // ONLY THE PT GETS THE REPORTS, THEN THE PT GENERATES AN ASSESSMENT FOR THE CLIENT TO VIEW.
             try
-            {
-                return await _functionClient.GetFromJsonAsync<List<ProgramReports>>($"api/GetClientsReports?clientsId={clientsId}");
+            {  
+                //return await _functionClient.GetFromJsonAsync<List<ProgramReports>>($"api/GetClientsReports?clientsId={clientsId}");
+                return await _functionClient.GetFromJsonAsync<List<ProgramReports>>($"api/GetReportListAsync");
             }
             catch (Exception ex)
             {
@@ -413,6 +420,8 @@ namespace NRGSystemsPtAppWebSite.Services
                             ProgramId = y.ProgramId,
                             DateIssued = y.DateIssued,
                             NameOfExercise = y.NameOfExercise,
+                            WeightsSet = y.WeightsSet,
+                            RepsSet = y.RepsSet,
                             Weights = y.Weights,
                             RepsCompleted = y.RepsCompleted,
                             TrainingTime = y.TrainingTime,
@@ -443,6 +452,7 @@ namespace NRGSystemsPtAppWebSite.Services
         public async Task<List<ProgramReports>> GetAllReports()
         {
             return await _functionClient.GetFromJsonAsync<List<ProgramReports>>("api/GetReportListAsync");
+           // return await _localClient.GetFromJsonAsync<List<ProgramReports>>("api/GetReportListAsync");
         }
 
         public Task<ProgramReports> EditAReport(ProgramReports report)

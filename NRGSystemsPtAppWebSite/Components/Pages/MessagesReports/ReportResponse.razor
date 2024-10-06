@@ -11,12 +11,10 @@
 
 @rendermode InteractiveServer
 
-<PageTitle>
-    <h2> Report for @currentReport.ClientName </h2>
-    <label for="ProgramName" class="control-label">@program.ProgramTitle</label>
-</PageTitle>
+    <h2> Report for @program.ClientName </h2>
+    @* <label for="ProgramName" class="control-label">@program.ProgramTitle</label> *@
 
-<h4 style="color:#1e90ff"> @program.NameOfExercise </h4>
+<h4 style="color:#1e90ff"> @program.ProgramTitle ==> @program.NameOfExercise </h4>
 
 <table class="table" style="color:#1e90ff">
     <thead>
@@ -43,7 +41,8 @@
         <tr >
             <th>
                 <ModifyReportProgram program="program"
-                                     SelectNewExercise=@OpenExerciseSelector />
+                                     SelectNewExercise=@OpenExerciseSelector 
+                                     reportId=int.Parse(reportId)/>
             </th>
             <th> 
                 <NewExerciseSelector allExercises="exerciseList" />
@@ -54,6 +53,8 @@
 
 
 @code {
+    [Parameter]
+    public string clientsName { get; set; } = string.Empty;
     [Parameter]
     public string reportId { get; set; } = string.Empty;
     [Parameter]
@@ -89,6 +90,7 @@
     {
         await InitialiseComponents();
 
+        clientsName = program.ClientName;
         commentColumns.PtsInitialComments = program.PtComments;
         commentColumns.ClientsComments = currentReport.ClientsComments;
 
@@ -149,8 +151,10 @@
 
     private void WeightRepSplitter()
     {
-        string[] stArr = currentReport.RepsCompleted.Split(' ');
-        if(stArr.Length == 1)
+        string[] stArrReps = currentReport.RepsCompleted.Split(',');
+        string[] stArrWeights = currentReport.Weights.Split(',');
+
+        if(stArrReps.Length == 1)
         {
             achievedReps.Add(double.Parse(currentReport.RepsCompleted));
             usedWeights.Add(double.Parse(currentReport.Weights));
@@ -158,36 +162,65 @@
             targetReps.Add(double.Parse(program.Repetitions));
         }
 
-        if(stArr.Length > 1)
+        if (stArrReps.Length > 1)
         {
-        for (int i = 0; i < 2; i++)
-        {
-
-            foreach (var sp in stArr)
+            foreach (var sp in stArrReps)
             {
                 if (sp.Contains("-"))
                 {
-                    var spli1 = sp.Split('-');
-                    int cou = spli1.Count();
-                    if (cou > 1)
-                    {
-                        if (i == 0)
-                        {
-                            targetReps.Add(double.Parse(spli1[0]));
-                            achievedReps.Add(double.Parse(spli1[1]));
-                            stArr = currentReport.Weights.Split(' ');
-                        }
-                        else
-                        {
-                            targetWeights.Add(double.Parse(spli1[0]));
-                            usedWeights.Add(double.Parse(spli1[1]));
-                        }
-                    }
+                    // var spli1 = sp.Split('-');
+                    // int cou = spli1.Count();
+                    // if (cou > 1)
+                    // {
+                    //     if (i == 0)
+                    //     {
+                    //         targetReps.Add(double.Parse(spli1[0]));
+                    //         achievedReps.Add(double.Parse(spli1[1]));
+                    //         stArrReps = currentReport.Weights.Split(' ');
+                    //     }
+                    //     else
+                    //     {
+                    //         targetWeights.Add(double.Parse(spli1[0]));
+                    //         usedWeights.Add(double.Parse(spli1[1]));
+                    //     }
+                    // }
                 }
+                else
+                {
+                    achievedReps.Add(double.Parse(sp));
+                    targetReps.Add(double.Parse(program.Repetitions));
+                }
+            }
+            foreach (var sp in stArrWeights)
+            {
+                if (sp.Contains("-"))
+                {
+                    // var spli1 = sp.Split('-');
+                    // int cou = spli1.Count();
+                    // if (cou > 1)
+                    // {
+                    //     if (i == 0)
+                    //     {
+                    //         targetReps.Add(double.Parse(spli1[0]));
+                    //         achievedReps.Add(double.Parse(spli1[1]));
+                    //         stArrReps = currentReport.Weights.Split(' ');
+                    //     }
+                    //     else
+                    //     {
+                    //         targetWeights.Add(double.Parse(spli1[0]));
+                    //         usedWeights.Add(double.Parse(spli1[1]));
+                    //     }
+                    // }
+                }
+                else
+                {
+                    usedWeights.Add(double.Parse(sp));
+                    targetWeights.Add(double.Parse(program.Weights));
                 }
             }
         }
     }
+
 
 
     protected async Task SubmitProgram(ClientsProgram value)
@@ -199,7 +232,8 @@
     {
         // NewExerciseSelector exs = new();
     }
-    protected async Task UpdateProgramOption(ClientsProgram value)
+
+    protected void UpdateProgramOption(ClientsProgram value)
     {
         program = value;
         ExtractValuesFromLists();

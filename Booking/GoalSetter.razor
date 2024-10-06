@@ -1,0 +1,26 @@
+﻿
+<div class="for-group">
+    <div class="col-sm-12 col-lg-2">
+        <label for="Goals" class="control-label" style="color:#1e90ff; font-family:Cooper; font-size:larger">Goals</label>
+        <select name=" " id=" " class="selection-box" @onchange="SelectGoal">
+            <option style="color:black; font-family:Cooper; font-size:xx-large">Select your training goal</option>
+            @foreach (var goal in GoalList)
+            {
+                @* <option @onselectionchange="@(e => SelectGoal(goal))"> @goal</option> *@
+                <option value="@goal" style="color:black; font-family:Cooper; font-size:larger"> @goal</option>
+            }
+        </select>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string[] GoalList { get; set; } = new[] { "Weight Management", "Strength", "Sports Specific", "Longevity", "Size" };
+    [Parameter]
+    public EventCallback<string> GoalSelectionMade { get; set; }
+
+    async Task SelectGoal(ChangeEventArgs e)
+    {
+        await GoalSelectionMade.InvokeAsync(e.Value.ToString());
+    }
+}

@@ -14,8 +14,11 @@
                 <label style="font-weight:800; font-size:xx-large; text-align:center; color:#1e90ff">ANDROID</label>
             </th>
             <th width="@Widths">
-                <label style="align-content:center; font-size:xx-large; font-weight:800; color:#1e90ff">APPLE</label>
+                <label style="align-content:center; font-size:xx-large; font-weight:800; color:#1e90ff">   </label>
             </th>
+@*             <th width="@Widths">
+                <label style="align-content:center; font-size:xx-large; font-weight:800; color:#1e90ff">APPLE</label>
+            </th> *@
             <th width="@Widths">
                 <label style="font-weight:800; font-size:xx-large; color:#1e90ff">iOS</label>
             </th>
@@ -28,9 +31,12 @@
                    role="button" target="=_top">app</a> *@
                 <img src="@AndroidIcon" width="@Widths" height="@Widths" @onclick="DownloadAndroidFile" margin="5rem" />
             </td>
-            <td style="background-color:#1e90ff">
-                <img src="@AppleIcon" width="@Widths" height="@Widths" @onclick="DownloadAppleFile" />
+            <td>
+                <label style="align-content:center; font-size:xx-large; font-weight:800; color:#1e90ff">   </label>
             </td>
+@*             <td style="background-color:#1e90ff">
+                <img src="@AppleIcon" width="@Widths" height="@Widths" @onclick="DownloadAppleFile" />
+            </td> *@
             <td style="background-color:#1e90ff" >
                 <img src="@IosIcon" width="@Widths" height="@Widths" style="align-content:center" @onclick="DownloadIosFile" />
             </td>
@@ -61,12 +67,12 @@
     public string IosIcon { get; set; } = "https://nrgptappstorage.blob.core.windows.net/appimages/ios.png.png";
     
     [Parameter]
-    public string ios { get; set; } = "https://nrgptappstorage.blob.core.windows.net/apps/RealSteelPtApp.ipa";
+    public string ios { get; set; } = " ";
     [Parameter]
-    public string and_aab { get; set; } = "https://nrgptappstorage.blob.core.windows.net/apps/com.nrgsystems.realsteelptapp-Signed.aab";
+    public string and_aab { get; set; } = " ";
     
     [Parameter]
-    public string and_apk { get; set; } = "https://nrgptappstorage.blob.core.windows.net/apps/com.nrgsystems.realsteelptapp-Signed.apk";
+    public string and_apk { get; set; } = "https://nrgptappstorage.blob.core.windows.net/apps/com.nrgsystems.nrgptapp.apk";
 
     [Parameter]
     public int Widths { get; set; } = 250;
