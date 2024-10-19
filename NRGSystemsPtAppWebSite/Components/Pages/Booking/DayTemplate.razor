@@ -1,6 +1,9 @@
 ﻿@using MudBlazor
 @using NRGSystemsPtAppWebSite.Handlers
 @using NRGSystemsPtAppWebSite.Models
+@using NRGSystemsPtAppWebSite.Services
+
+@inject ClientRestFunctionServices clientService
 
 @* @inject AppStateService appStateService *@
 
@@ -28,16 +31,10 @@
 
 @code
 {
-    // [Parameter]
-    // public List<string> TakenTimes { get; set; } = new();
-    // [Parameter]
-    // public List<string> TimeStyles { get; set; } = new();
-    // [Parameter]
-    // public int TimeCounter { get; set; } = 1;
-    // [Parameter]
-    // public int TakenTimesCount { get; set; } = 1;
-    // [Parameter]
-    // public int TimeStylesCount { get; set; } = 1;
+    // [CascadingParameter]
+    // public HttpContext httpContext { get; set; }
+    [Parameter]
+    public static string ClientsName { get; set; } = "";
 
     [Parameter]
     public List<CalendarEvents> NewBookings { get; set; } = new();
@@ -52,12 +49,21 @@
     static int timeCounter = 0;
 
 
-    // protected override async Task OnInitializedAsync()
-    // {
+    protected override async Task OnInitializedAsync()
+    {
+        // if (httpContext is not null)
+        // {
+        //     foreach (var claim in httpContext.User.Claims)
+        //     {
+        //         if (claim.Type.Contains("givenname"))
+        //         {
+        //             ClientsName = claim.Value;
+        //         }
+        //     }
+        // }
+    }
 
-    // }
-
-    public static List<CalendarEvents> CheckNewBookings(List<CalendarEvents> newBooks)
+    public List<CalendarEvents> CheckNewBookings(List<CalendarEvents> newBooks)
     {
         ValidBookings = [];
         foreach (var booking in newBooks)
@@ -77,12 +83,12 @@
     //     {
     //         if(booking.BookingDate == dayToCheck.ToString())
     //         {
-                
+
     //         }
     //     }
     // }
 
-    public static async Task UpdateDay(List<CalendarEvents> _dayBookings)
+    public async Task UpdateDay(List<CalendarEvents> _dayBookings)
     {
         takenTimes = new();
         timeStyles = new();
@@ -116,6 +122,13 @@
         {
             var b = booking.StartTime.Substring(0, 5);
 
+            // if (clientService is null)
+            //     clientService = new ClientRestFunctionServices();
+
+            // var thisClienta = await clientService.GetAClient(booking.BookingClientId);
+            // // var thisClient = await clientService.GetAClient(booking.BookingClientId).Result;
+            // ClientsName = thisClienta.FirstName;
+
             for (int i = 0; i < takenTimes.Count; i++)
             {
                 var ttSplit = takenTimes[i].Split("-");
@@ -131,6 +144,7 @@
 
                     for (int t = 0; t < res5; t++)
                     {
+                        takenTimes[i] = "BOOKED";
                         timeStyles[i] = "padding:1rem; width:10rem; background-color:red";
                         i++;
                     }
@@ -140,7 +154,7 @@
     }
 
     // public static List<CalendarEvents> GetTodaysBookings(List<CalendarEvents> _sortBookings)
-    public static List<CalendarEvents> GetTodaysBookings(DateTime dateToGet)
+    public List<CalendarEvents> GetTodaysBookings(DateTime dateToGet)
     {
         List<CalendarEvents> sortedBookings = new List<CalendarEvents>();
         TodaysBookings = [];
@@ -154,7 +168,7 @@
         }
 
         _ = UpdateDay(TodaysBookings);
-    return sortedBookings;
+        return TodaysBookings;
     }
 }
 

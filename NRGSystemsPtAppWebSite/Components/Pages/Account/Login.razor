@@ -34,8 +34,14 @@
             <div class="mb-3 d-grip gap-2">
                 <table>
                     <tr>
-                        <button type="submit" class="btn btn-primary">Login</button>
+                        <button type="submit" class="btn btn-primary">LOGIN</button>
                         <label style="font-size:x-large; font-family:Cooper">     </label>
+                        
+                        <div class="card-body">
+                            <span style="color:black; font-family:Cooper; font-weight:500"> Want an account? Please <a class="fw-bolder" style="color:red" href="/AddNewClient">click here</a> to create</span>
+                        </div>
+
+                        @* <input type="button" class="btn btn-primary" style="color:white; font-family:Cooper; margin:1rem" @onclick="selectCore" value="SIGN UP....." /> *@
 @*                         <button style="justify-content:flex-end" class="btn btn-primary" @onclick="AddNewClient">Sign up..</button> *@
 @*                         <a class="nav-link btn btn-primary" href="AddNewClient">
                             <button type="button" class="nav-link btn btn-primary">Sign up..</button>
@@ -51,12 +57,12 @@
 </div>
 
 @code {
-    [CascadingParameter]
-    public HttpContext? httpContext { get; set; }
-    [CascadingParameter]
-    public Clients? selectedClient { get; set; }
-    [SupplyParameterFromForm]
-    public LoginViewModel Model { get; set; } = new();
+        [CascadingParameter]
+        public HttpContext? httpContext { get; set; }
+        [CascadingParameter]
+        public Clients? selectedClient { get; set; }
+        [SupplyParameterFromForm]
+        public LoginViewModel Model { get; set; } = new();
     private string? errorMessage;
 
     private async Task Authenticate()

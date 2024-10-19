@@ -7,8 +7,8 @@
 
 @rendermode InteractiveServer
 
-<table cellpadding="30" cellspacing="30" border="1" style="background-color:#1e90ff; padding:3rem; margin:3rem">
-    <thead style="align-content:center; column-gap:3rem; background-color:black; padding:3rem; margin:3rem">
+<table cellpadding="30" cellspacing="30" border="1" style="background-color:transparent; padding:3rem; margin:3rem">
+    <thead style="align-content:center; column-gap:3rem; background-color:transparent; padding:3rem; margin:3rem">
         <tr>
             <th width="@Widths">
                 <label style="font-weight:800; font-size:xx-large; text-align:center; color:#1e90ff">ANDROID</label>
@@ -24,7 +24,7 @@
             </th>
         </tr>
     </thead>
-    <tbody style="background-color:black">
+    <tbody style="background-color:transparent">
         <tr>
             <td style="background-color:#1e90ff">
 @*                 <a id="exportCsv" class="btn" href="and_aab" download="realsteelapp.aab"
@@ -90,18 +90,18 @@
         }
     }
     
-    async Task DownloadAppleFile()
-    {
-        try
-        {
-            var fileName = "nrgpt.apk";
-            await JS.InvokeVoidAsync("triggerFileDownload", fileName, and_apk);
-        }
-        catch(Exception ex)
-        {
-            Console.WriteLine(ex.Message);
-        }
-    }
+    // async Task DownloadAppleFile()
+    // {
+    //     try
+    //     {
+    //         var fileName = "nrgpt.apk";
+    //         await JS.InvokeVoidAsync("triggerFileDownload", fileName, and_apk);
+    //     }
+    //     catch(Exception ex)
+    //     {
+    //         Console.WriteLine(ex.Message);
+    //     }
+    // }
     
     async Task DownloadIosFile()
     {

@@ -25,7 +25,10 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 builder.Services.AddAuthorization();
 builder.Services.AddCascadingAuthenticationState();
 
-builder.Services.AddSweetAlert2();
+builder.Services.AddSweetAlert2(options =>
+{
+    options.Theme = SweetAlertTheme.Minimal;
+});
 
 builder.Services.AddMudServices();
 

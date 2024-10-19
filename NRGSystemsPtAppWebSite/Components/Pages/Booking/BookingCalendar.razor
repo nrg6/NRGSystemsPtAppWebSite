@@ -13,7 +13,7 @@
 
 <div>
     <div>
-        <label for="Client" style="color:#1e90ff; font-family:Cooper; font-size:larger" align-content:center; width:max-content">CLIENT</label>
+        <label for="Client" style="color:#1e90ff; font-family:Cooper; font-size:larger; align-content:center; width:max-content">CLIENT</label>
         <input for="Client" style="color:#1e90ff; font-family:Cooper; font-size:larger" type="text" @bind="ClientsName" />
     </div>
     <br />
@@ -55,8 +55,13 @@
     </div>
     <br />
     <div>
-        <button style="color:#1e90ff; font-family:Cooper; font-size:larger" @onclick="CommitAppointment"> COMMIT </button>
+@*         <button class="btn btn-danger" style="color:#1e90ff; font-family:Cooper; font-size:larger" 
+                @onclick="@(async () => await sweetAlertService.FireAsync("Condemnation"))">
+            COMMIT
+        </button> *@
+        <button class="btn btn-danger" style="color:#1e90ff; font-family:Cooper; font-size:larger" @onclick="CommitAppointment"> COMMIT </button>
     </div>
+    <br />
     <div>
         <DayTemplate NewBookings ="_newBookings" />
     </div>
@@ -95,6 +100,7 @@
     private TimeSpan? _timeStart = new TimeSpan(08, 00, 00);
     private TimeSpan? _timeEnd = new TimeSpan(09, 00, 00);
 
+    DayTemplate dayTemplate = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -119,7 +125,7 @@
     private async Task UpdateCalendarView()
     {
         _newBookings = await apiCalendar.GetAllCalendarEvent();
-        _validBookings = DayTemplate.CheckNewBookings(_newBookings);
+        _validBookings = dayTemplate.CheckNewBookings(_newBookings);
     }
 
     private async Task DateSelected() // EventArgs e)
@@ -151,6 +157,8 @@
         {
             var result = await sweetAlertService.FireAsync(new SweetAlertOptions
             {
+                Width = "300",
+                Position = "center",
                 Title = "You have missed some information",
                 Text = $"Check the values have been set",
                 Icon = SweetAlertIcon.Warning
@@ -159,8 +167,6 @@
         }
         return true;
     }
-
-    private readonly IDialogService _dialogService;
 
     private async Task CommitAppointment(MouseEventArgs e)
     {
@@ -180,20 +186,19 @@
                                                    // booking.Duration = _timeEnd.ToString();
         booking.BookingClientId = clientsID;
 
-
-
         if (CheckBooking(booking))
         {
             // var result = await sweetAlertService.FireAsync(new SweetAlertOptions
             var result = await sweetAlertService.FireAsync(new SweetAlertOptions
                 {
-                    Title = "Confirmation",
-                    // Text = $"You are making an appointment for /r/n"  +
-                    //                 $"{booking.BookingDate} at {booking.StartTime} to {booking.Duration}/r/n",
-                    // Icon = SweetAlertIcon.Warning,
-                    // ShowCancelButton = true,
-                    // ConfirmButtonText = "Yes, I want to make this appointment",
-                    // CancelButtonText = "No, I need to check my diary."
+                    Width = "400",
+                    Title = "BOOKINGS",
+                    Text = $"You are trying to make an appointment for "  +
+                           $"{booking.BookingDate} at {booking.StartTime} to {booking.Duration}",
+                    Icon = SweetAlertIcon.Warning,
+                    ShowCancelButton = true,
+                    ConfirmButtonText = "Yes, I want to provisionally make this appointment",
+                    CancelButtonText = "No, I need to check my diary.",
                 });
 
             var confirm = !string.IsNullOrEmpty(result.Value);
@@ -202,18 +207,6 @@
                 BookingCalendar._newBookings.Add(booking);
                 var x = await apiCalendar.CreateACalendarEvent(booking);
              }
-        }
-        else
-        {
-            // await MessageBox.Show(state);
-            //         var alert = new Alert { Color = AlertColor.Success, Heading = "Well done!", Message = state };
-            // await alert.Show();
-            // var result = await MudBlazor.DialogService.ShowMessageBox(
-            // "Secure The Ring", 
-            // (MarkupString) $"You <br /> Shall <br /> not <br /> <b>Pass!<b/>",
-            // yesText:"Fire Whip!", cancelText:"Smash Ground");
-            // state= result==null ? "Returned to Moria" : "Fighting With Gandalf!";
-            // StateHasChanged();
         }
 
         BookingCalendar._newBookings.Add(booking);
@@ -304,6 +297,6 @@
         // _ = UpdateCalendarView();
         BookingDate = DateTime.Parse(e.Value.ToString());
 
-        DayTemplate.GetTodaysBookings(DateTime.Parse(e.Value.ToString()));
+        dayTemplate.GetTodaysBookings(DateTime.Parse(e.Value.ToString()));
     }
 }

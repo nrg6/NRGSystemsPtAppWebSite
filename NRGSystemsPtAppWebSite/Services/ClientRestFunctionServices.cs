@@ -79,7 +79,6 @@ namespace NRGSystemsPtAppWebSite.Services
             //var clients = new List<Clients>();
             try
             {
-                //clients = await _functionClient.GetFromJsonAsync<List<Clients>>("api/GetAllClients");
                 return await _functionClient.GetFromJsonAsync<List<Clients>>("api/GetAllClients");
                 //return await _localClient.GetFromJsonAsync<List<Clients>>("api/GetAllClients");
             }
@@ -96,8 +95,7 @@ namespace NRGSystemsPtAppWebSite.Services
             var clients = new Clients();
             try
             {
-                //clients = await _functionClient.GetFromJsonAsync<Clients>(
-                //clients = await _localClient.GetFromJsonAsync<Clients>(
+                // return await _localClient.GetFromJsonAsync<Clients>(
                 return await _functionClient.GetFromJsonAsync<Clients>(
                     $"api/GetAClient?clientsId={clientsId}");
             }

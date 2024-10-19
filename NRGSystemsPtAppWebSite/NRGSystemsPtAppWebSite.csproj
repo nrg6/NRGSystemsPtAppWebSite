@@ -11,9 +11,8 @@
     <PackageReference Include="Blazor.Bootstrap" Version="3.0.0" />
     <PackageReference Include="C1.Blazor.Chart" Version="8.0.20241.927" />
     <PackageReference Include="CurrieTechnologies.Razor.SweetAlert2" Version="5.6.0" />
-    <PackageReference Include="DayPilot" Version="5.0.303" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.8" />
-    <PackageReference Include="Microsoft.Extensions.Azure" Version="1.7.5" />
+    <PackageReference Include="Microsoft.Extensions.Azure" Version="1.7.6" />
     <PackageReference Include="Microsoft.Maui.Graphics" Version="8.0.91" />
     <PackageReference Include="MudBlazor" Version="7.8.0" />
     <PackageReference Include="System.Formats.Asn1" Version="8.0.1" />
